@@ -1,0 +1,355 @@
+*&---------------------------------------------------------------------*
+*& Include          Z21RSICSF01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form GET_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM GET_DATA .
+
+  "비교 -> 'X'
+
+  SELECT B~BNFPO, B~MATNR, B~BANFN, K~EBELN, B~MENGE AS B_MENGE, K~MENGE AS K_MENGE, B~MEINS
+    INTO CORRESPONDING FIELDS OF TABLE @GT_DATA
+    FROM EBAN AS B LEFT JOIN EKPO AS K ON B~BANFN = K~BANFN
+   WHERE B~WERKS IN @S_WERKS
+     AND B~MATNR IN @S_MATNR
+     AND B~EKGRP IN @S_EKGRP
+     AND B~BANFN IN @S_BANFN
+     AND B~LOEKZ = ''.
+*     AND B~MENGE > K~MENGE.
+         "요청 수량 > 기발주수량
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_OBJECT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM CREATE_OBJECT .
+
+  CREATE OBJECT GO_CONTAINER
+    EXPORTING
+      SIDE                        = CL_GUI_DOCKING_CONTAINER=>DOCK_AT_LEFT
+      EXTENSION                   = CL_GUI_DOCKING_CONTAINER=>WS_MAXIMIZEBOX.
+
+  CREATE OBJECT GO_GRID
+    EXPORTING
+      I_PARENT = GO_CONTAINER.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form INIT_FCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM INIT_FCAT .
+
+  PERFORM SET_FCAT USING GT_FCAT  'ICON'      '상태'    'X' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'MATNR'     '자재 코드' 'X' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'BANFN'     'PR 번호' '' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'BNFPO'     '자재 번호' '' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'B_MENGE'   'PR 수량' '' '' '' 'MEINS'.
+  PERFORM SET_FCAT USING GT_FCAT  'EBELN'     'PO 번호' '' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'K_MENGE'   'PO 수량' ''  '' '' 'MEINS'.
+  PERFORM SET_FCAT USING GT_FCAT  'REQTY'     '요청 수량' '' '' '' 'MEINS'.
+  PERFORM SET_FCAT USING GT_FCAT  'ORQTY'     '발주 수량' '' 'X' 'X' 'MEINS'.
+  PERFORM SET_FCAT USING GT_FCAT  'MEINS'     '수량 단위' '' ''  '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'MESSAGE'   '메시지'   ''  '' '' ''.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> GT_FCAT
+*&      --> P_
+*&---------------------------------------------------------------------*
+FORM SET_FCAT  USING    P_GT_FCAT LIKE GT_FCAT
+                        P_FIELDNAME
+                        P_COLTEXT
+                        P_KEY
+                        P_EDIT
+                        P_ZERO
+                        P_QFIELDNAME.
+
+  CLEAR GS_FCAT.
+  GS_FCAT-FIELDNAME  = P_FIELDNAME.
+  GS_FCAT-COLTEXT    = P_COLTEXT.
+  GS_FCAT-KEY        = P_KEY.
+  GS_FCAT-EDIT       = P_EDIT.
+  GS_FCAT-NO_ZERO    = P_ZERO.
+  GS_FCAT-REF_TABLE  = 'EKPO'.
+  GS_FCAT-REF_FIELD  = 'MENGE'."
+  GS_FCAT-QFIELDNAME = P_QFIELDNAME.
+  APPEND GS_FCAT TO P_GT_FCAT.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form INIT_LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM INIT_LAYOUT .
+
+  CLEAR GS_LAYO.
+
+  GS_LAYO-CWIDTH_OPT = 'A'.
+  GS_LAYO-SEL_MODE   = 'D'.
+  GS_LAYO-ZEBRA      = 'X'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM DISPLAY_ALV .
+
+  CALL METHOD GO_GRID->SET_TABLE_FOR_FIRST_DISPLAY
+     EXPORTING
+*      I_BUFFER_ACTIVE               =
+*      I_BYPASSING_BUFFER            =
+*      I_CONSISTENCY_CHECK           =
+*      I_STRUCTURE_NAME              =
+*      IS_VARIANT                    =
+*      I_SAVE                        =
+*      I_DEFAULT                     = 'X'
+       IS_LAYOUT                     = GS_LAYO
+*      IS_PRINT                      =
+*      GT_SPECIAL_GROUPS             =
+*      GT_TOOLBAR_EXCLUDING          =
+*      GT_HYPERLINK                  =
+*      GT_ALLV_GRAPHICS               =
+*      GT_EXCEPT_QINFO               =
+*      IR_SALLV_ADAPTER               =
+    CHANGING
+      IT_OUTTAB                     = GT_DISP
+      IT_FIELDCATALOG               = GT_FCAT
+*      GT_SORT                       =
+*      GT_FILTER                     =
+*    EXCEPTIONS
+*      INVALID_PARAMETER_COMBINATION = 1
+*      PROGRAM_ERROR                 = 2
+*      TOO_MANY_LINES                = 3
+*      others                        = 4
+          .
+  IF SY-SUBRC <> 0.
+*   Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BUILD_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM BUILD_DATA .
+
+  MOVE-CORRESPONDING GT_DATA TO GT_DISP.
+
+  CLEAR GS_DISP.
+
+  LOOP AT GT_DISP INTO GS_DISP.
+
+    GS_DISP-ICON  = ICON_LED_YELLOW.
+    GS_DISP-REQTY = GS_DISP-B_MENGE - GS_DISP-K_MENGE.
+    MODIFY GT_DISP FROM GS_DISP.
+  ENDLOOP.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form POST_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM POST_DATA .
+
+  CALL METHOD GO_GRID->GET_SELECTED_ROWS
+    IMPORTING
+      ET_INDEX_ROWS = GT_INDEX.
+*      ET_ROW_NO     =
+      .
+
+  PERFORM BAPI_PO_CREATE.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BAPI_PO_CREATE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM BAPI_PO_CREATE .
+
+  DATA: LS_POHEADER     TYPE BAPIMEPOHEADER.
+  DATA: LS_POHEADERX    TYPE BAPIMEPOHEADERX.
+  DATA: LT_POITEM       TYPE TABLE OF BAPIMEPOITEM.
+  DATA: LT_POITEMX      TYPE TABLE OF BAPIMEPOITEMX.
+  DATA: LS_POITEM       LIKE LINE  OF LT_POITEM.
+  DATA: LS_POITEMX      LIKE LINE  OF LT_POITEMX.
+  DATA: LT_BAPIRET2     TYPE TABLE OF BAPIRET2.
+  DATA: LS_BAPIRET2     LIKE LINE  OF LT_BAPIRET2.
+  DATA: LV_EBELN        TYPE EBELN.
+  DATA: LV_INDEX        TYPE I VALUE 1.
+  "DATA: LV_PO_ITEM      TYPE I VALUE 10.
+
+  LOOP AT GT_INDEX INTO GS_INDEX.
+
+    CLEAR LT_BAPIRET2.
+    CLEAR LT_POITEM.
+    CLEAR LT_POITEMX.
+
+    READ TABLE GT_DATA INTO GS_DATA INDEX GS_INDEX-INDEX.
+    READ TABLE GT_DISP INTO GS_DISP INDEX GS_INDEX-INDEX.
+
+*     EDIT HEADER
+    CLEAR: LS_POHEADER.
+    LS_POHEADER-COMP_CODE    = '1010'.
+    LS_POHEADER-DOC_TYPE     = 'NB'.
+    LS_POHEADER-VENDOR       = 'BPSICS66'.
+    LS_POHEADER-CREAT_DATE   = SY-DATUM.
+    LS_POHEADER-PURCH_ORG    = '1010'.
+    LS_POHEADER-PUR_GROUP    = 'SGZ'.
+    LS_POHEADER-DOC_DATE     = SY-DATUM.
+
+    CLEAR: LS_POHEADERX.
+    LS_POHEADERX-COMP_CODE   = 'X'.
+    LS_POHEADERX-DOC_TYPE    = 'X'.
+    LS_POHEADERX-VENDOR      = 'X'.
+    LS_POHEADERX-CREAT_DATE  = 'X'.
+    LS_POHEADERX-PURCH_ORG   = 'X'.
+    LS_POHEADERX-PUR_GROUP   = 'X'.
+    LS_POHEADERX-DOC_DATE    = 'X'.
+
+*     EDIT ITEM
+    CLEAR: LS_POITEM.
+    LS_POITEM-PO_ITEM    = '00010'.
+    LS_POITEM-PREQ_NO    = GS_DATA-BANFN.
+    LS_POITEM-PREQ_ITEM  = GS_DATA-BNFPO.
+    LS_POITEM-MATERIAL   = GS_DATA-MATNR.
+    LS_POITEM-PLANT      = '1010'.
+    LS_POITEM-TAX_CODE   = ''.
+    LS_POITEM-QUANTITY   = GS_DATA-ORQTY.
+    APPEND LS_POITEM TO LT_POITEM.
+
+    CLEAR: LS_POITEMX.
+    LS_POITEMX-PO_ITEM     = '00010'.
+    LS_POITEMX-PO_ITEMX    = 'X'.
+    LS_POITEMX-PREQ_NO     = 'X'.
+    LS_POITEMX-PREQ_ITEM   = 'X'.
+    LS_POITEMX-MATERIAL    = 'X'.
+    LS_POITEMX-PLANT       = 'X'.
+    LS_POITEMX-TAX_CODE    = 'X'.
+    LS_POITEMX-QUANTITY    = 'X'.
+    APPEND LS_POITEMX TO LT_POITEMX.
+
+*     CALL BAPI
+    CALL FUNCTION 'BAPI_PO_CREATE1'
+      EXPORTING
+        POHEADER         = LS_POHEADER
+        POHEADERX        = LS_POHEADERX
+*       TESTRUN          = 'X'
+      IMPORTING
+        EXPPURCHASEORDER = LV_EBELN
+      TABLES
+        RETURN           = LT_BAPIRET2
+        POITEM           = LT_POITEM
+        POITEMX          = LT_POITEMX
+*       POSCHEDULE       =
+*       POSCHEDULEX      =
+      .
+
+
+*    IF LV_EBELN IS NOT INITIAL.
+*     COMMIT
+    IF LV_EBELN IS NOT INITIAL.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          WAIT = 'X'.
+
+      GS_DISP-ICON    = ICON_LED_GREEN.
+      GS_DISP-MESSAGE = LV_EBELN.
+      GS_DISP-EBELN   = LV_EBELN.
+
+      MODIFY GT_DISP FROM GS_DISP INDEX GS_INDEX-INDEX.
+    ELSE.
+
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'
+*         IMPORTING
+*           RETURN        =
+                  .
+
+*      READ TABLE LT_BAPIRET2 INTO LS_BAPIRET2.
+
+      GS_DISP-ICON = ICON_LED_RED.
+      GS_DISP-MESSAGE = 'ERROR'.
+
+      MODIFY GT_DISP FROM GS_DISP INDEX GS_INDEX-INDEX.
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& FORM SET_EVENT OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+FORM SET_EVENT .
+
+  CREATE OBJECT GO_EVENT_RECEIVER.
+
+  SET HANDLER GO_EVENT_RECEIVER->HANDLE_DATA_CHANGED FOR GO_GRID.
+
+  CALL METHOD GO_GRID->REGISTER_EDIT_EVENT
+    EXPORTING
+      I_EVENT_ID = GO_GRID->MC_EVT_MODIFIED.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form HANDLE_DATA_CHANGED
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ER_DATA_CHANGED
+*&---------------------------------------------------------------------*
+FORM HANDLE_DATA_CHANGED USING PO_DATA_CHANGED
+                         TYPE REF TO CL_ALV_CHANGED_DATA_PROTOCOL.
+
+  DATA: LS_CELLS TYPE LVC_S_MODI,
+        LT_CELLS TYPE LVC_T_MODI.
+
+  LT_CELLS = PO_DATA_CHANGED->MT_GOOD_CELLS.
+
+  LOOP AT LT_CELLS INTO LS_CELLS.    "PO_DATA_CHANGED가 가지고 있는 INTERNAL TABLE MT_GOOD_CELLS
+
+    CALL METHOD PO_DATA_CHANGED->MODIFY_CELL
+      EXPORTING
+        I_ROW_ID    = LS_CELLS-ROW_ID
+        I_FIELDNAME = LS_CELLS-FIELDNAME
+        I_VALUE     = LS_CELLS-VALUE.
+  ENDLOOP.
+
+ENDFORM.

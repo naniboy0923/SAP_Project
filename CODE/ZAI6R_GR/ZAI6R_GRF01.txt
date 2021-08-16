@@ -1,0 +1,824 @@
+*&---------------------------------------------------------------------*
+*& Include          Z12R3003F01
+
+*&---------------------------------------------------------------------*
+*& Form GET_FILE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM GET_FILE .
+
+  DATA : LT_PATH TYPE FILETABLE,
+         LS_PATH TYPE FILE_TABLE.
+
+  DATA : LV_RC TYPE I.
+
+  CALL METHOD CL_GUI_FRONTEND_SERVICES=>FILE_OPEN_DIALOG
+*  EXPORTING
+*    WINDOW_TITLE            =
+*    DEFAULT_EXTENSION       =
+*    DEFAULT_FILENAME        =
+*    FILE_FILTER             =
+*    WITH_ENCODING           =
+*    INITIAL_DIRECTORY       =
+*    MULTISELECTION          =
+    CHANGING
+      FILE_TABLE = LT_PATH
+      RC         = LV_RC.
+*    USER_ACTION             =
+*    FILE_ENCODING           =
+*  EXCEPTIONS
+*    FILE_OPEN_DIALOG_FAILED = 1
+*    CNTL_ERROR              = 2
+*    ERROR_NO_GUI            = 3
+*    NOT_SUPPORTED_BY_GUI    = 4
+*    others                  = 5
+
+
+  READ TABLE LT_PATH INTO LS_PATH INDEX 1.
+  .
+  IF SY-SUBRC = 0.
+    P_PATH = LS_PATH.
+  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form UPLOAD_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM UPLOAD_DATA .
+
+  "이하 엑셀업로드
+  DATA : LT_INTERN TYPE TABLE OF ALSMEX_TABLINE,
+         LS_INTERN TYPE          ALSMEX_TABLINE.
+
+  CALL FUNCTION 'ALSM_EXCEL_TO_INTERNAL_TABLE'
+    EXPORTING
+      FILENAME    = P_PATH
+      I_BEGIN_COL = 1
+      I_BEGIN_ROW = 2 "ROW 시작값
+      I_END_COL   = 4 "COL 끝값
+      I_END_ROW   = 9999
+    TABLES
+      INTERN      = LT_INTERN.
+
+  CLEAR GT_EXCEL.
+  LOOP AT LT_INTERN INTO LS_INTERN.
+
+    CASE LS_INTERN-COL.
+      WHEN 1.
+        GS_EXCEL-PDA   = LS_INTERN-VALUE.
+      WHEN 2.
+        GS_EXCEL-EBELN = LS_INTERN-VALUE.
+      WHEN 3.
+        GS_EXCEL-MENGE = LS_INTERN-VALUE.
+      WHEN 4.
+        GS_EXCEL-XBLNR = LS_INTERN-VALUE.
+    ENDCASE.
+
+    AT END OF ROW.
+      APPEND GS_EXCEL TO GT_EXCEL.
+      CLEAR GS_EXCEL.
+    ENDAT.
+
+  ENDLOOP.
+
+
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form GET_DATA_1
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM GET_DATA_1 .
+
+  "이하 조회 테이블들 DISP_1 테이블을 기준으로 취합
+  "DISP_1/MARA/MAKT/MARC 취합
+
+
+  "각각 로컬 테이블로 변수선언
+  DATA: LT_DATA TYPE TABLE OF TY_001,
+        BEGIN OF LS_MARA,
+          MATNR TYPE MARA-MATNR,
+          MEINS TYPE MARA-MEINS,
+        END OF LS_MARA,
+        LT_MARA LIKE TABLE OF LS_MARA,
+
+        BEGIN OF LS_MAKT,
+          MATNR TYPE MAKT-MATNR,
+          MAKTX TYPE MAKT-MAKTX,
+        END OF LS_MAKT,
+        LT_MAKT LIKE TABLE OF LS_MAKT,
+
+        BEGIN OF LS_MARC,
+          MATNR TYPE MARC-MATNR,
+          WERKS TYPE MARC-WERKS,
+          EISBE TYPE MARC-EISBE,
+        END OF LS_MARC,
+        LT_MARC LIKE TABLE OF LS_MARA,
+
+        LS_DATA TYPE TY_001.
+
+
+
+  "데이터 조회
+  SELECT MATNR WERKS LGORT LABST
+      FROM MARD
+      INTO CORRESPONDING FIELDS OF TABLE LT_DATA
+      WHERE MATNR IN S_MATNR
+        AND WERKS IN S_WERKS
+        AND LGORT IN S_LGORT.
+
+  SELECT MATNR MEINS
+        FROM MARA
+        INTO CORRESPONDING FIELDS OF TABLE LT_MARA.
+
+  SELECT MATNR MAKTX
+          FROM MAKT
+          INTO CORRESPONDING FIELDS OF TABLE LT_MAKT.
+
+  SELECT MATNR WERKS EISBE
+            FROM MARC
+            INTO CORRESPONDING FIELDS OF TABLE LT_MARC.
+
+
+  LOOP AT LT_DATA INTO LS_DATA.
+    READ TABLE LT_MARA INTO LS_MARA
+    WITH KEY MATNR = LS_DATA-MATNR.
+
+    IF SY-SUBRC = 0.
+
+      LS_DATA-MEINS = LS_MARA-MEINS.
+      MODIFY LT_DATA FROM LS_DATA.
+
+    ENDIF.
+
+  ENDLOOP.
+
+  LOOP AT LT_DATA INTO LS_DATA.
+    READ TABLE LT_MAKT INTO LS_MAKT
+    WITH KEY MATNR = LS_DATA-MATNR.
+
+    IF SY-SUBRC = 0.
+
+      LS_DATA-MAKTX = LS_MAKT-MAKTX.
+      MODIFY LT_DATA FROM LS_DATA.
+
+    ENDIF.
+
+  ENDLOOP.
+
+  "조회 조건이 MATNR/WERKS 두개에 전부 키값을 줘야하는 상태라 SELECT SINGLE 사용.
+  LOOP AT LT_DATA INTO LS_DATA.
+
+    SELECT SINGLE EISBE
+    FROM MARC
+    INTO LS_DATA-EISBE
+    WHERE MATNR = LS_DATA-MATNR
+    AND WERKS = LS_DATA-WERKS.
+
+    IF SY-SUBRC = 0.
+
+
+      MODIFY LT_DATA FROM LS_DATA.
+
+    ENDIF.
+
+  ENDLOOP.
+
+  GT_DISP_1 = LT_DATA.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_DATA_2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM GET_DATA_2 .
+
+  "DISP_2/EKKO/EKPO/MAKT 취합 변수선언
+  DATA: LT_DATA TYPE TABLE OF TY_002,
+        LS_DATA TYPE TY_002,
+
+        BEGIN OF LS_EKKO,
+          EBELN TYPE EKKO-EBELN,
+          ERNAM TYPE EKKO-ERNAM,
+          AEDAT TYPE EKKO-AEDAT,
+          LIFNR TYPE EKKO-LIFNR,
+        END OF LS_EKKO,
+        LT_EKKO LIKE TABLE OF LS_EKKO,
+
+        BEGIN OF LS_MAKT,
+          MATNR TYPE MAKT-MATNR,
+          MAKTX TYPE MAKT-MAKTX,
+        END OF LS_MAKT,
+        LT_MAKT LIKE TABLE OF LS_MAKT.
+
+  "DISP_2/EKKO/EKPO/MAKT 불러오기
+  SELECT EBELN MATNR EBELP MENGE WERKS LGORT ELIKZ
+    FROM EKPO
+    INTO CORRESPONDING FIELDS OF TABLE LT_DATA
+   WHERE MATNR IN S_MATNR2
+     AND WERKS IN S_WERKS2
+     AND LGORT IN S_LGORT2
+     AND ELIKZ <> 'X'.
+  SELECT EBELN ERNAM AEDAT LIFNR
+    FROM EKKO
+    INTO CORRESPONDING FIELDS OF TABLE LT_EKKO.
+
+  SELECT MATNR MAKTX
+    FROM MAKT
+    INTO CORRESPONDING FIELDS OF TABLE LT_MAKT.
+
+
+  "불러온 테이블들 각각 LT_DATA 기준으로 루프돌려 붙이기
+  LOOP AT LT_DATA INTO LS_DATA.
+    READ TABLE LT_EKKO INTO LS_EKKO
+    WITH KEY EBELN = LS_DATA-EBELN.
+
+    IF SY-SUBRC = 0.
+      LS_DATA-ERNAM = LS_EKKO-ERNAM.
+      LS_DATA-AEDAT = LS_EKKO-AEDAT.
+      LS_DATA-LIFNR = LS_EKKO-LIFNR.
+      MODIFY LT_DATA FROM LS_DATA.
+    ENDIF.
+
+  ENDLOOP.
+
+  LOOP AT LT_DATA INTO LS_DATA.
+    READ TABLE LT_MAKT INTO LS_MAKT
+    WITH KEY MATNR = LS_DATA-MATNR.
+    IF SY-SUBRC = 0.
+      LS_DATA-MAKTX = LS_MAKT-MAKTX.
+      MODIFY LT_DATA FROM LS_DATA.
+    ENDIF.
+  ENDLOOP.
+
+  "GT_EXCEL 의 값을 LT_DATA 에 이식하기
+
+  LOOP AT LT_DATA INTO LS_DATA.
+    READ TABLE GT_EXCEL INTO GS_EXCEL
+    WITH KEY EBELN = LS_DATA-EBELN.
+    IF SY-SUBRC = 0.
+      LS_DATA-PDA = GS_EXCEL-PDA.
+      LS_DATA-MENGE = GS_EXCEL-MENGE.
+      LS_DATA-XBLNR = GS_EXCEL-XBLNR.
+      MODIFY LT_DATA FROM LS_DATA.
+    ENDIF.
+  ENDLOOP.
+
+  "로컬변수를 DISP_2에 이식.
+  GT_DISP_2 = LT_DATA.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_OBJECT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM CREATE_OBJECT_1 .
+  CREATE OBJECT GO_CONTAINER_1
+    EXPORTING
+      CONTAINER_NAME = 'GO_CONTAINER_1'.
+
+  CREATE OBJECT GO_GRID_1
+    EXPORTING
+      I_PARENT = GO_CONTAINER_1.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FIELDCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM SET_FIELDCAT_1 .
+
+  CLEAR GS_FIELDCAT_1.
+  GS_FIELDCAT_1-FIELDNAME = 'MATNR'.
+  GS_FIELDCAT_1-COLTEXT   = '자재번호'.
+  GS_FIELDCAT_1-KEY       = 'X'.
+  GS_FIELDCAT_1-REF_TABLE = 'MARA'.
+  GS_FIELDCAT_1-REF_FIELD  = 'MATNR'.
+  APPEND GS_FIELDCAT_1 TO GT_FIELDCAT_1.
+
+  CLEAR GS_FIELDCAT_1.
+  GS_FIELDCAT_1-FIELDNAME = 'MAKTX'.
+  GS_FIELDCAT_1-COLTEXT   = '자재명'.
+  GS_FIELDCAT_1-KEY       = 'X'.
+  GS_FIELDCAT_1-REF_TABLE = 'MAKT'.
+  GS_FIELDCAT_1-REF_FIELD  = 'MAKTX'.
+  APPEND GS_FIELDCAT_1 TO GT_FIELDCAT_1.
+
+  CLEAR GS_FIELDCAT_1.
+  GS_FIELDCAT_1-FIELDNAME = 'WERKS'.
+  GS_FIELDCAT_1-COLTEXT   = '플랜트'.
+  GS_FIELDCAT_1-KEY       = 'X'.
+  GS_FIELDCAT_1-REF_TABLE = 'EKPO'.
+  GS_FIELDCAT_1-REF_FIELD  = 'WERKS'.
+  APPEND GS_FIELDCAT_1 TO GT_FIELDCAT_1.
+
+  CLEAR GS_FIELDCAT_1.
+  GS_FIELDCAT_1-FIELDNAME = 'LGORT'.
+  GS_FIELDCAT_1-COLTEXT   = '창고'.
+  GS_FIELDCAT_1-KEY       = 'X'.
+  GS_FIELDCAT_1-REF_TABLE = 'EKPO'.
+  GS_FIELDCAT_1-REF_FIELD  = 'LGORT'.
+  APPEND GS_FIELDCAT_1 TO GT_FIELDCAT_1.
+
+  CLEAR GS_FIELDCAT_1.
+  GS_FIELDCAT_1-FIELDNAME = 'LABST'.
+  GS_FIELDCAT_1-COLTEXT   = '수량'.
+  GS_FIELDCAT_1-KEY       = 'X'.
+  GS_FIELDCAT_1-REF_TABLE = 'MARD'.
+  GS_FIELDCAT_1-REF_FIELD  = 'LABST'.
+  APPEND GS_FIELDCAT_1 TO GT_FIELDCAT_1.
+
+  CLEAR GS_FIELDCAT_1.
+  GS_FIELDCAT_1-FIELDNAME = 'MEINS'.
+  GS_FIELDCAT_1-COLTEXT   = '단위'.
+  GS_FIELDCAT_1-KEY       = 'X'.
+  GS_FIELDCAT_1-REF_TABLE = 'MARA'.
+  GS_FIELDCAT_1-REF_FIELD  = 'MEINS'.
+  APPEND GS_FIELDCAT_1 TO GT_FIELDCAT_1.
+
+  CLEAR GS_FIELDCAT_1.
+  GS_FIELDCAT_1-FIELDNAME = 'EISBE'.
+  GS_FIELDCAT_1-COLTEXT   = '안전재고'.
+  GS_FIELDCAT_1-KEY       = 'X'.
+  GS_FIELDCAT_1-REF_TABLE = 'MARC'.
+  GS_FIELDCAT_1-REF_FIELD  = 'EISBE'.
+  APPEND GS_FIELDCAT_1 TO GT_FIELDCAT_1.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM SET_LAYOUT_1 .
+  CLEAR GS_LAYOUT_1.
+  GS_LAYOUT_1-ZEBRA = 'X'.      "행간 색상 얼룩말
+  GS_LAYOUT_1-CWIDTH_OPT = 'A'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM DISPLAY_ALV_1 .
+  CALL METHOD GO_GRID_1->SET_TABLE_FOR_FIRST_DISPLAY
+    EXPORTING
+*     I_BUFFER_ACTIVE =
+*     I_BYPASSING_BUFFER            =
+*     I_CONSISTENCY_CHECK           =
+*     I_STRUCTURE_NAME              =
+*     IS_VARIANT      =
+*     I_SAVE          =
+*     I_DEFAULT       = 'X'
+      IS_LAYOUT       = GS_LAYOUT_1
+*     IS_PRINT        =
+*     IT_SPECIAL_GROUPS             =
+*     IT_TOOLBAR_EXCLUDING          =
+*     IT_HYPERLINK    =
+*     IT_ALV_GRAPHICS =
+*     IT_EXCEPT_QINFO =
+*     IR_SALV_ADAPTER =
+    CHANGING
+      IT_OUTTAB       = GT_DISP_1
+      IT_FIELDCATALOG = GT_FIELDCAT_1
+*     IT_SORT         =
+*     IT_FILTER       =
+*    EXCEPTIONS
+*     INVALID_PARAMETER_COMBINATION = 1
+*     PROGRAM_ERROR   = 2
+*     TOO_MANY_LINES  = 3
+*     OTHERS          = 4
+    .
+  IF SY-SUBRC <> 0.
+*   Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form REFRESH_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM REFRESH_ALV_1 .
+
+  CALL METHOD GO_GRID_1->REFRESH_TABLE_DISPLAY.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_OBJECT_2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM CREATE_OBJECT_2 .
+  CREATE OBJECT GO_CONTAINER_2
+    EXPORTING
+      CONTAINER_NAME = 'GO_CONTAINER_2'.
+
+  CREATE OBJECT GO_GRID_2
+    EXPORTING
+      I_PARENT = GO_CONTAINER_2.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FIELDCAT_2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM SET_FIELDCAT_2 .
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'ICON'.
+  GS_FIELDCAT_2-COLTEXT   = '상태'.
+  GS_FIELDCAT_2-REF_TABLE = 'ICON'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME  = 'PDA'.
+  GS_FIELDCAT_2-COLTEXT    = 'PDA코드'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'EBELN'.
+  GS_FIELDCAT_2-COLTEXT   = 'PO번호'.
+  GS_FIELDCAT_2-KEY       = 'X'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKPO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'EBELN'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'MBLNR'.
+  GS_FIELDCAT_2-COLTEXT   = 'GR번호'.
+  GS_FIELDCAT_2-REF_TABLE = 'MSEG'.
+  GS_FIELDCAT_2-REF_FIELD  = 'MBLNR'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'MATNR'.
+  GS_FIELDCAT_2-COLTEXT   = '자재번호'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKPO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'MATNR'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'MAKTX'.
+  GS_FIELDCAT_2-COLTEXT   = '자재명'.
+  GS_FIELDCAT_2-REF_TABLE = 'MAKT'.
+  GS_FIELDCAT_2-REF_FIELD  = 'MAKTX'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+    CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'EBELP'.
+  GS_FIELDCAT_2-COLTEXT   = '품목번호'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKPO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'EBELP'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'MENGE'.
+  GS_FIELDCAT_2-COLTEXT   = '수량'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKPO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'MENGE'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'WERKS'.
+  GS_FIELDCAT_2-COLTEXT   = '플랜트'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKPO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'WERKS'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'LGORT'.
+  GS_FIELDCAT_2-COLTEXT   = '창고'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKPO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'LGORT'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'DATUM'.
+  GS_FIELDCAT_2-COLTEXT   = '입고일'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'LIFNR'.
+  GS_FIELDCAT_2-COLTEXT   = 'VENDOR'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKKO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'LIFNR'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'ERNAM'.
+  GS_FIELDCAT_2-COLTEXT   = '담당자'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKKO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'ERNAM'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'XBLNR'.
+  GS_FIELDCAT_2-COLTEXT   = 'DELIV.NOTE'.
+  GS_FIELDCAT_2-REF_TABLE = 'MKPF'.
+  GS_FIELDCAT_2-REF_FIELD  = 'XBLNR'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+  CLEAR GS_FIELDCAT_2.
+  GS_FIELDCAT_2-FIELDNAME = 'AEDAT'.
+  GS_FIELDCAT_2-COLTEXT   = '생성일'.
+  GS_FIELDCAT_2-REF_TABLE = 'EKKO'.
+  GS_FIELDCAT_2-REF_FIELD  = 'AEDAT'.
+  APPEND GS_FIELDCAT_2 TO GT_FIELDCAT_2.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_LAYOUT_2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM SET_LAYOUT_2 .
+  CLEAR GS_LAYOUT_2.
+  GS_LAYOUT_2-ZEBRA = 'X'.      "행간 색상 얼룩말
+  GS_LAYOUT_2-CWIDTH_OPT = 'A'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_ALV_2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM DISPLAY_ALV_2 .
+  CALL METHOD GO_GRID_2->SET_TABLE_FOR_FIRST_DISPLAY
+    EXPORTING
+*     I_BUFFER_ACTIVE =
+*     I_BYPASSING_BUFFER            =
+*     I_CONSISTENCY_CHECK           =
+*     I_STRUCTURE_NAME              =
+*     IS_VARIANT      =
+*     I_SAVE          =
+*     I_DEFAULT       = 'X'
+      IS_LAYOUT       = GS_LAYOUT_2
+*     IS_PRINT        =
+*     IT_SPECIAL_GROUPS             =
+*     IT_TOOLBAR_EXCLUDING          =
+*     IT_HYPERLINK    =
+*     IT_ALV_GRAPHICS =
+*     IT_EXCEPT_QINFO =
+*     IR_SALV_ADAPTER =
+    CHANGING
+      IT_OUTTAB       = GT_DISP_2
+      IT_FIELDCATALOG = GT_FIELDCAT_2
+*     IT_SORT         =
+*     IT_FILTER       =
+*    EXCEPTIONS
+*     INVALID_PARAMETER_COMBINATION = 1
+*     PROGRAM_ERROR   = 2
+*     TOO_MANY_LINES  = 3
+*     OTHERS          = 4
+    .
+  IF SY-SUBRC <> 0.
+*   Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form REFRESH_ALV_2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM REFRESH_ALV_2 .
+
+  CALL METHOD GO_GRID_2->REFRESH_TABLE_DISPLAY.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GR_PROCESS
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM GR_PROCESS .
+
+
+  "선택한 줄 찾기
+  PERFORM SEL_ROWS.
+
+  "GR 처리 바피
+
+  PERFORM BAPI_GOODSMVT_CREATE.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SEL_ROWS
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM SEL_ROWS .
+
+  CLEAR GS_ROWS.
+  CALL METHOD GO_GRID_2->GET_SELECTED_ROWS
+    IMPORTING
+      ET_INDEX_ROWS = GT_ROWS.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BAPI_GOODSMVT_CREATE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM BAPI_GOODSMVT_CREATE .
+
+  DATA : ST_GOODSMVT_HEADER       LIKE  BAPI2017_GM_HEAD_01,
+         ST_GOODSMVT_CODE         LIKE  BAPI2017_GM_CODE,
+         ST_GOODSMVT_HEADRET      LIKE  BAPI2017_GM_HEAD_RET,
+
+
+         G_GOODSMVT_DOC           LIKE  BAPI2017_GM_HEAD_RET-MAT_DOC,
+         G_MATERIALDOCUMENT       TYPE  BAPI2017_GM_HEAD_RET-MAT_DOC,
+         G_MATDOCUMENTYEAR        TYPE  BAPI2017_GM_HEAD_RET-DOC_YEAR,
+         IT_GOODSMVT_ITEM         LIKE  BAPI2017_GM_ITEM_CREATE
+                                        OCCURS  0 WITH  HEADER  LINE,
+
+         IT_GOODSMVT_SERIALNUMBER LIKE BAPI2017_GM_SERIALNUMBER
+                                  OCCURS  0 WITH  HEADER  LINE,
+
+         IT_RETURN                LIKE  BAPIRET2 OCCURS  0 WITH  HEADER  LINE,
+         IS_RETURN                LIKE BAPIRET2.
+
+
+*    REFRESH: IT_GOODSMVT_ITEM, IT_GOODSMVT_SERIALNUMBER, IT_RETURN.
+*    CLEAR:   IT_GOODSMVT_ITEM, IT_GOODSMVT_SERIALNUMBER, IT_RETURN.
+  LOOP AT GT_ROWS INTO GS_ROWS.
+    READ TABLE GT_DISP_2 INTO GS_DISP_2 INDEX GS_ROWS-INDEX.
+
+
+
+
+    CLEAR ST_GOODSMVT_HEADER.
+    ST_GOODSMVT_HEADER-PSTNG_DATE   = SY-DATUM. " 기표일자
+    ST_GOODSMVT_HEADER-DOC_DATE     = SY-DATUM. " 증빙일자
+*    ST_GOODSMVT_HEADER-REF_DOC_NO   = GS_DISP_2-XBLNR. "DELIVERY NOTE.
+    ST_GOODSMVT_CODE-GM_CODE        = '01'.     " PO->GR
+
+    REFRESH: IT_GOODSMVT_ITEM, IT_GOODSMVT_SERIALNUMBER, IT_RETURN.
+    CLEAR:   IT_GOODSMVT_ITEM, IT_GOODSMVT_SERIALNUMBER, IT_RETURN.
+
+
+    IT_GOODSMVT_ITEM-MOVE_TYPE  = '101'.
+
+
+    IT_GOODSMVT_ITEM-MATERIAL   = gS_disp_2-MATNR.
+    IT_GOODSMVT_ITEM-PLANT      = gS_disp_2-WERKS.
+    IT_GOODSMVT_ITEM-STGE_LOC   = '0001'."gS_disp_2-LGORT.
+    IT_GOODSMVT_ITEM-PO_NUMBER  = GS_DISP_2-EBELN.
+    IT_GOODSMVT_ITEM-PO_ITEM    = GS_DISP_2-EBELP.
+    IT_GOODSMVT_ITEM-MVT_IND    = 'B'.
+    "PO의 아이템 넘버 추가 (DISP에)
+
+*    it_goodsmvt_item-batch      = gt_disp_2-fr_charg.
+
+
+*    it_goodsmvt_item-move_mat   = gt_display-to_matnr.
+*    it_goodsmvt_item-move_plant = gt_display-to_werks.
+*    it_goodsmvt_item-move_stloc = gt_display-to_lgort.
+*    it_goodsmvt_item-move_batch = gt_display-to_charg.
+
+
+    IT_GOODSMVT_ITEM-ENTRY_QNT  = GS_DISP_2-MENGE.
+*    it_goodsmvt_item-entry_uom  = gS_disp_2-meins.
+    APPEND IT_GOODSMVT_ITEM.
+
+    CLEAR : G_MATERIALDOCUMENT, G_MATDOCUMENTYEAR.
+    CALL FUNCTION 'BAPI_GOODSMVT_CREATE'
+      EXPORTING
+        GOODSMVT_HEADER  = ST_GOODSMVT_HEADER
+        GOODSMVT_CODE    = ST_GOODSMVT_CODE
+      IMPORTING
+        GOODSMVT_HEADRET = ST_GOODSMVT_HEADRET
+        MATERIALDOCUMENT = G_MATERIALDOCUMENT
+        MATDOCUMENTYEAR  = G_MATDOCUMENTYEAR
+      TABLES
+        GOODSMVT_ITEM    = IT_GOODSMVT_ITEM
+        RETURN           = IT_RETURN.
+
+
+    READ TABLE IT_RETURN INTO IS_RETURN WITH KEY TYPE = 'E'.
+
+    IF IT_RETURN-TYPE <> 'E' AND G_MATERIALDOCUMENT IS NOT INITIAL. "+문서번호 유무
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+      MESSAGE S002 WITH G_MATERIALDOCUMENT. "성공 처리 시 GR 넘버와 함께 메시지
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+      MESSAGE S003 DISPLAY LIKE 'E' WITH IT_RETURN-MESSAGE.        "실패 시 에러 처리 메세지
+    ENDIF.
+*    CLEAR G_GOODSMVT_DOC.
+*    IF NOT ST_GOODSMVT_HEADRET IS INITIAL.
+*      G_GOODSMVT_DOC = ST_GOODSMVT_HEADRET-MAT_DOC.
+*      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+*        EXPORTING
+*          WAIT = 'X'.
+**      gS_disp_2-msgty  = 'S'.
+*      gS_disp_2-MBLNR =  g_goodsmvt_doc.
+**      MODIFY gS_disp_2 INDEX l_tabix TRANSPORTING msgty msglin.
+*    ELSE.
+*      EXIT.
+**      READ TABLE it_return  INDEX 1.
+**      gS_disp_2-msgty  = 'E'.
+**      gS_disp_2-msglin = it_return-message.
+**      MODIFY gS_disp_2 INDEX l_tabix TRANSPORTING msgty msglin.
+*    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SELECTION_OUTPUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM SELECTION_OUTPUT .
+
+  LOOP AT SCREEN.
+    IF SCREEN-GROUP1 = 'R1'.
+      IF P_DISP = 'X'.
+        SCREEN-INPUT  = 1.
+        SCREEN-ACTIVE = 1.
+      ELSE.
+        SCREEN-INPUT  = 0.
+        SCREEN-ACTIVE = 0.
+
+      ENDIF.
+
+    ELSEIF SCREEN-GROUP1 = 'R2'.
+      IF P_CREATE = 'X'.
+        SCREEN-INPUT  = 1.
+        SCREEN-ACTIVE = 1.
+      ELSE.
+        SCREEN-INPUT  = 0.
+        SCREEN-ACTIVE = 0.
+
+      ENDIF.
+    ENDIF.
+
+    MODIFY SCREEN.
+  ENDLOOP.
+ENDFORM.

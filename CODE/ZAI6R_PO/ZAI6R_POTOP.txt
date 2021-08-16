@@ -1,0 +1,53 @@
+*&---------------------------------------------------------------------*
+*& Include          Z21RSICSTOP
+*&---------------------------------------------------------------------*
+
+TABLES: EBAN,
+        EKPO.
+
+DATA: BEGIN OF GS_DATA,
+
+  BNFPO       TYPE EBAN-BNFPO,  "자재 번호
+  MATNR       TYPE EBAN-MATNR,  "자재 코드
+  BANFN       TYPE EBAN-BANFN,  "PR 번호
+  B_MENGE     TYPE EBAN-MENGE,  "PR 수량
+  EBELN       TYPE EKPO-EBELN,  "PO 번호
+  K_MENGE     TYPE EKPO-MENGE,  "PO 수량
+  ORQTY       TYPE EBAN-MENGE,  "발주 수량
+  MEINS       TYPE EKPO-MEINS,  "수량 단위
+END OF GS_DATA.
+
+DATA GT_DATA LIKE TABLE OF GS_DATA.
+
+DATA: BEGIN OF GS_DISP,
+
+  ICON            TYPE ICON-ID,     "아이콘
+  MATNR           TYPE EBAN-MATNR,  "자재 코드
+  BANFN           TYPE EBAN-BANFN,  "PR 번호
+  BNFPO           TYPE EBAN-BNFPO,  "자재 번호
+  B_MENGE         TYPE EBAN-MENGE,  "PR 수
+  EBELN           TYPE EKPO-EBELN,  "PO 번호
+  K_MENGE         TYPE EKPO-MENGE,  "PO 수량
+  REQTY           TYPE EBAN-MENGE,  "요청 수량
+  ORQTY           TYPE EBAN-MENGE,  "발주 수량
+  MEINS           TYPE EKPO-MEINS,  "수량 단위
+  MESSAGE(100)    TYPE C,           "메시지
+END OF GS_DISP.
+
+DATA GT_DISP LIKE TABLE OF GS_DISP.
+
+DATA: GO_CONTAINER TYPE REF TO CL_GUI_DOCKING_CONTAINER,
+      GO_GRID      TYPE REF TO CL_GUI_ALV_GRID.
+
+DATA: GS_FCAT TYPE LVC_S_FCAT,
+      GT_FCAT TYPE LVC_T_FCAT.
+
+DATA: GS_LAYO TYPE LVC_S_LAYO.
+
+DATA: GV_OKCODE TYPE SY-UCOMM,
+      GV_UCOMM  TYPE SY-UCOMM.
+
+DATA: GO_EVENT_RECEIVER TYPE REF TO ZCL_EVENT_RECEIVER.
+
+DATA: GT_INDEX TYPE LVC_T_ROW,
+      GS_INDEX TYPE LVC_S_ROW.

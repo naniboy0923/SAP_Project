@@ -1,0 +1,51 @@
+*&---------------------------------------------------------------------*
+*& Report Z12R3003
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZAI6R_GR MESSAGE-ID ZAI12M.
+
+INCLUDE ZAI6R_GRCLS.
+INCLUDE ZAI6R_GRTOP.
+INCLUDE ZAI6R_GRSEL.
+INCLUDE ZAI6R_GRI01.
+INCLUDE ZAI6R_GRO01.
+INCLUDE ZAI6R_GRF01.
+
+
+
+
+
+INITIALIZATION.
+
+"엑셀 화면구성
+AT SELECTION-SCREEN OUTPUT.
+  PERFORM SELECTION_OUTPUT.
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR P_PATH.
+  PERFORM GET_FILE.
+
+
+
+START-OF-SELECTION.
+
+
+IF P_DISP = 'X'. "조회조건일 경우
+
+PERFORM GET_DATA_1. "조회조건 데이터 취합
+
+ELSEIF P_CREATE = 'X'. "GR처리 조건일 경우
+
+PERFORM UPLOAD_DATA. "엑셀값 불러오기
+PERFORM GET_DATA_2.  "GR처리 데이터 취합
+
+
+ENDIF.
+
+IF P_DISP = 'X'.
+  CALL SCREEN '0100'. "조회조건 CALL SCREEN
+
+ELSEIF P_CREATE = 'X'.
+  CALL SCREEN '0200'. "GR처리 CALL SCREEN
+
+ENDIF.

@@ -1,0 +1,82 @@
+*&---------------------------------------------------------------------*
+*& Include          Z27R0006TOP
+*&---------------------------------------------------------------------*
+
+TABLES : ZSO_TABLE_SICS.
+
+*DISP
+DATA : BEGIN OF GS_DISP1,
+       VBELN  TYPE ZSO_TABLE_SICS-VBELN, "so번호
+       POSNR  TYPE VBAP-POSNR,           "ITEM번호
+       OCSTT  TYPE ZSO_TABLE_SICS-OCSTT, "상태
+       ERDAT  TYPE VBAK-ERDAT,           "주문일자
+       MATNR  TYPE MARA-MATNR, "자재번호 "ZSO에서 MARA로 바꾼 상태임
+       ARKTX  TYPE VBAP-ARKTX,           "자재설명
+       KWMENG TYPE VBAP-KWMENG,          "수량
+       VRKME  TYPE VBAP-VRKME,           "단위
+       KUNNR  TYPE VBAK-KUNNR,           "고객사
+       BSTNK  TYPE VBAK-BSTNK,           "업체PO번호
+       ERNAM  TYPE VBAK-ERNAM,           "생성자
+       END OF GS_DISP1.
+DATA : GT_DISP1 LIKE TABLE OF GS_DISP1.
+
+
+DATA : BEGIN OF GS_DISP2,
+       MATNR TYPE EBAN-MATNR,  "자재번호
+       TXZ01 TYPE VBAP-ARKTX,  "자재설명
+       TMTNR TYPE EBAN-MATNR,  "최상위자재
+       MENGE TYPE EBAN-MENGE,  "수량
+       MEINS TYPE EBAN-MEINS,  "단위
+       BADAT TYPE EBAN-BADAT,  "배송일자
+       WERKS TYPE EBAN-WERKS,  "플랜트
+       EKGRP TYPE EBAN-EKGRP,  "PUR.GRP
+       MESGE TYPE CHAR100,     "결과메세지
+       END OF GS_DISP2.
+DATA : GT_DISP2 LIKE TABLE OF GS_DISP2.
+
+
+DATA : BEGIN OF GS_DISP_02,
+       WERKS TYPE MARD-WERKS,  "플랜트
+       MATNR TYPE MARD-MATNR,  "자재번호
+       ARKTX TYPE VBAP-ARKTX,  "현 재고
+       LABST TYPE MARD-LABST,  "주문재고
+       LFMON TYPE MARD-LFMON,  "총 재고(현재고+주문재고)
+       TOTAL TYPE I,
+       END OF GS_DISP_02.
+DATA : GT_DISP_02 LIKE TABLE OF GS_DISP_02.
+
+
+
+
+
+*클래스형 변수
+DATA : GO_DOCKING  TYPE REF TO CL_GUI_DOCKING_CONTAINER,
+       GO_CONT1    TYPE REF TO CL_GUI_CONTAINER, "왼쪼
+       GO_CONT2    TYPE REF TO CL_GUI_CONTAINER, "오른쪽
+       GO_CONT3    TYPE REF TO CL_GUI_CUSTOM_CONTAINER, "더블클릭
+       GO_GRID1    TYPE REF TO CL_GUI_ALV_GRID, "왼쪽
+       GO_GRID2    TYPE REF TO CL_GUI_ALV_GRID, "오른쪽
+       GO_GRID3    TYPE REF TO CL_GUI_ALV_GRID, "더블클릭
+       GO_SPLITTER TYPE REF TO CL_GUI_SPLITTER_CONTAINER.
+
+*EVENT
+DATA : GO_EVENT_RECEIVER TYPE REF TO ZCL_EVENT_RECEIVER.
+
+*FIELDCAT
+DATA : GS_FIELDCAT1 TYPE LVC_S_FCAT,
+       GT_FIELDCAT1 TYPE LVC_T_FCAT,
+       GS_FIELDCAT2 TYPE LVC_S_FCAT,
+       GT_FIELDCAT2 TYPE LVC_T_FCAT,
+       GS_FIELDCAT3 TYPE LVC_S_FCAT,
+       GT_FIELDCAT3 TYPE LVC_T_FCAT.
+
+*OKCODE
+DATA : GV_OKCODE TYPE SY-UCOMM,
+       GV_UCOMM TYPE SY-UCOMM.
+
+*LAYOUT
+DATA : GS_LAYO TYPE LVC_S_LAYO,
+       GS_LAYO2 TYPE LVC_S_LAYO.
+
+DATA : GS_ROWS TYPE LVC_S_ROW,
+       GT_ROWS TYPE LVC_T_ROW.

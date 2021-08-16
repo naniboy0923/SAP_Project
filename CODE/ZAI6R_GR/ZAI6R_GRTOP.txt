@@ -1,0 +1,85 @@
+*&---------------------------------------------------------------------*
+*& Include          Z12R3003TOP
+*&---------------------------------------------------------------------*
+
+
+
+
+
+"SCREEN 0100 / 자재조회 프로그램 관련 DISP 변수선언
+TYPES : BEGIN OF TY_001,
+        MATNR TYPE MARA-MATNR, "자재코드
+        MAKTX TYPE MAKT-MAKTX, "자재명
+        WERKS TYPE MARD-WERKS, "플랜트
+        LGORT TYPE MARD-LGORT, "창고
+        LABST TYPE MARD-LABST, "수량
+        MEINS TYPE MARA-MEINS, "단위
+        EISBE TYPE MARC-EISBE, "안전재고
+        END OF TY_001.
+
+
+DATA : GT_DISP_1 TYPE TABLE OF TY_001,
+       GS_DISP_1 TYPE          TY_001.
+
+
+"ALV DISP_1 /자재조회 프로그램 관련 ALV 변수선언
+DATA : GO_CONTAINER_1 TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+       GO_GRID_1      TYPE REF TO CL_GUI_ALV_GRID.
+
+DATA : GT_FIELDCAT_1 TYPE LVC_T_FCAT,
+       GS_FIELDCAT_1 TYPE LVC_S_FCAT,
+       GS_LAYOUT_1   TYPE LVC_S_LAYO.
+
+
+
+
+"SCREEN 0200 / GR 처리 프로그램 DISP 변수선언
+
+TYPES :  BEGIN OF TY_002,
+         ICON     TYPE ICON-ID,    "아이콘
+         PDA(16)  TYPE C,          "PDA 코드
+         EBELN    TYPE EKPO-EBELN, "PO번호
+         MBLNR    TYPE MSEG-MBLNR, "GR번호
+         MATNR    TYPE EKPO-MATNR, "자재번호
+         EBELP    TYPE EKPO-EBELP, "품목번호
+         MAKTX    TYPE MAKT-MAKTX, "자재명
+         MENGE    TYPE EKPO-MENGE, "수량
+         WERKS    TYPE EKPO-WERKS, "플랜트
+         LGORT    TYPE EKPO-LGORT, "창고
+         DATUM(8) TYPE D,          "입고일
+         LIFNR    TYPE EKKO-LIFNR, "벤더
+         ERNAM    TYPE EKKO-ERNAM, "담당자
+         XBLNR    TYPE MKPF-XBLNR, "DELIVERY NOTE
+         AEDAT    TYPE EKKO-AEDAT, "PO CREATED DATE
+         END OF TY_002.
+DATA : GT_DISP_2 TYPE TABLE OF TY_002,
+       GS_DISP_2 TYPE          TY_002.
+
+"ALV DISP_2/ GR처리 프로그램 ALV 변수선언
+
+
+DATA : GO_CONTAINER_2 TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+       GO_GRID_2      TYPE REF TO CL_GUI_ALV_GRID.
+
+DATA : GT_FIELDCAT_2 TYPE LVC_T_FCAT,
+       GS_FIELDCAT_2 TYPE LVC_S_FCAT,
+       GS_LAYOUT_2   TYPE LVC_S_LAYO.
+
+DATA : GV_OKCODE  TYPE SY-UCOMM,
+       GV_UCOMM   TYPE SY-UCOMM.
+
+DATA : GS_ROWS TYPE LVC_S_ROW,
+       GT_ROWS TYPE LVC_T_ROW.
+
+
+"EXCEL 업로드 관련 변수선언
+
+TYPES : BEGIN OF TY_EXCEL,
+        PDA(16)  TYPE C,          "PDA 코드
+        EBELN    TYPE EKPO-EBELN, "PO번호 (키값)
+        MENGE    TYPE EKPO-MENGE, "수량
+        XBLNR    TYPE MKPF-XBLNR, "DELIVERY NOTE
+        END   OF TY_EXCEL.
+
+DATA : GS_EXCEL TYPE          TY_EXCEL,
+       GT_EXCEL TYPE TABLE OF TY_EXCEL.

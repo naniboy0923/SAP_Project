@@ -1,0 +1,753 @@
+*&---------------------------------------------------------------------*
+*& Include          Z27R0006F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form SET_INSTANCE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_instance .
+
+*MAIN SCREEN
+CREATE OBJECT go_docking
+  EXPORTING
+    side                        = go_docking->dock_at_left
+    extension                   = cl_gui_docking_container=>ws_maximizebox.
+
+*SPLITTER
+CREATE OBJECT go_splitter
+  EXPORTING
+    parent            = go_docking
+    rows              = 2
+    columns           = 1.
+
+*CONTAINER 할당
+CALL METHOD go_splitter->get_container
+  EXPORTING
+    row    = 1
+    column = 1
+  RECEIVING
+    container = go_cont1.
+
+CALL METHOD go_splitter->get_container
+  EXPORTING
+    row    = 2
+    column = 1
+  RECEIVING
+    container = go_cont2.
+
+
+*ALV
+CREATE OBJECT go_grid1
+  EXPORTING
+    i_parent          = go_cont1.
+
+CREATE OBJECT go_grid2
+  EXPORTING
+    i_parent          = go_cont2.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_alv .
+
+*LEFT ALV
+CALL METHOD go_grid1->set_table_for_first_display
+  EXPORTING
+    is_layout                     = gs_layo
+  CHANGING
+    it_outtab                     = gt_disp1
+    it_fieldcatalog               = gt_fieldcat1.
+
+*RIGHT ALV
+CALL METHOD go_grid2->set_table_for_first_display
+  EXPORTING
+    is_layout                     = gs_layo2
+  CHANGING
+    it_outtab                     = gt_disp2
+    it_fieldcatalog               = gt_fieldcat2.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FIELDCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fieldcat .
+
+*LEFT
+CLEAR gt_fieldcat1.
+
+PERFORM get_fcat USING 'VBELN' 'SO번호' 'X' 'X'.
+PERFORM get_fcat USING 'POSNR' 'ITEM No.' '' 'X'.
+PERFORM get_fcat USING 'ICON' '상태' '' ''.
+PERFORM get_fcat USING 'ERDAT' '주문일자' '' ''.
+PERFORM get_fcat USING 'MATNR' '자재번호' '' ''.
+PERFORM GET_FCAT USING 'ARKTX' '자재설명' '' ''.
+PERFORM get_fcat USING 'KWMENG' '수량' '' ''.
+PERFORM get_fcat USING 'VRKME' '단위' '' ''.
+PERFORM get_fcat USING 'KUNNR' '고객사' '' ''.
+PERFORM get_fcat USING 'BSTNK' '업체 PO번호' '' ''.
+PERFORM get_fcat USING 'ERNAM' '생성자' '' ''.
+
+
+
+
+*RIGHT
+CLEAR gt_fieldcat2.
+
+PERFORM get_fcat2 USING 'MATNR' '자재번호' '' ''.
+PERFORM GET_FCAT2 USING 'TXZ01' '자재설명' '' ''.
+PERFORM GET_FCAT2 USING 'TMTNR' '상위자재' '' ''.
+PERFORM get_fcat2 USING 'MENGE' '수량' '' ''.
+PERFORM get_fcat2 USING 'MEINS' '단위' '' ''.
+PERFORM get_fcat2 USING 'BADAT' '배송일자' 'X' ''.
+PERFORM get_fcat2 USING 'WERKS' 'PLANT' 'X' 'EBAN'.
+PERFORM get_fcat2 USING 'EKGRP' 'Pur.Grp' 'X' 'EBAN'.
+PERFORM get_fcat2 USING 'MESGE' 'PR생성 결과' '' ''.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_FCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> P_
+*&      --> P_
+*&---------------------------------------------------------------------*
+FORM get_fcat  USING    VALUE(p_NAME)
+                        VALUE(p_TEXT)
+                        VALUE(P_HSPOT)
+                        VALUE(P_KEY).
+
+CLEAR gs_fieldcat1.
+gs_fieldcat1-fieldname = p_name.
+gs_fieldcat1-coltext   = p_text.
+GS_fIELDCAT1-HOTSPOT   = P_HSPOT.
+GS_FIELDCAT1-KEY       = P_KEY.
+APPEND gs_fieldcat1 TO gt_fieldcat1.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_FCAT2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> P_
+*&      --> P_
+*&---------------------------------------------------------------------*
+FORM get_fcat2  USING    VALUE(p_NAME)
+                         VALUE(p_TEXT)
+                         VALUE(P_EDIT)
+                         VALUE(P_REFF).
+
+CLEAR gs_fieldcat2.
+gs_fieldcat2-fieldname = p_name.
+gs_fieldcat2-coltext   = p_text.
+GS_fIELDCAT2-EDIT      = P_EDIT.
+GS_FIELDCAT2-REF_TABLE = P_REFF.
+APPEND gs_fieldcat2 TO gt_fieldcat2.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_ALL
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_all .
+
+SELECT K~VBELN P~POSNR K~ERDAT P~MATNR P~ARKTX P~KWMENG P~VRKME K~KUNNR K~BSTNK K~ERNAM
+  FROM VBAP AS P INNER JOIN VBAK AS K
+       ON P~VBELN = K~VBELN
+
+  INTO CORRESPONDING FIELDS OF TABLE gt_disp1
+  WHERE K~vbeln IN s_vbeln AND
+        P~matnr IN s_matnr AND
+        K~AUDAT IN S_AUDAT AND
+        K~KUNNR IN s_patnr AND
+        K~ERNAM IN S_ERNAM.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_OPEN
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_open .
+
+SELECT K~VBELN, P~POSNR, K~ERDAT, P~MATNR, P~ARKTX, P~KWMENG, P~VRKME, K~KUNNR, K~BSTNK, K~ERNAM
+  FROM VBAP AS P INNER JOIN VBAK AS K
+       ON P~VBELN = K~VBELN
+                 LEFT JOIN ZSO_TABLE_SICS AS A
+       ON P~VBELN = A~VBELN
+*                 INNER JOIN MARA AS M
+*       ON P~MATNR = M~MATNR
+
+  INTO CORRESPONDING FIELDS OF TABLE @gt_disp1
+  WHERE K~vbeln IN @s_vbeln AND
+        P~matnr IN @s_matnr AND
+        K~AUDAT IN @S_AUDAT AND
+        K~KUNNR IN @s_patnr AND
+        K~ERNAM IN @S_ERNAM AND
+        A~ocstt IS NULL. "PR생성 안된 것들
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_EVENT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_event .
+
+
+CREATE OBJECT GO_EVENT_RECEIVER.
+
+SET HANDLER GO_EVENT_RECEIVER->HANDLE_DOUBLE_CLICK FOR GO_GRID2.
+SET HANDLER GO_EVENT_RECEIVER->HANDLE_DATA_CHANGED FOR GO_GRID2.
+SET HANDLER GO_EVENT_RECEIVER->HANDLE_HOTSPOT_CLICK FOR GO_GRID1.
+
+*EVENT 자체가 발생했는지?
+CALL METHOD go_grid2->register_edit_event
+  EXPORTING
+    i_event_id = GO_GRID2->MC_EVT_MODIFIED
+*  EXCEPTIONS
+*    error      = 1
+*    others     = 2
+        .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form HANDLE_DOUBLE_CLICK
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> E_ROW
+*&      --> E_COLUMN
+*&---------------------------------------------------------------------*
+FORM handle_double_click  USING    p_row TYPE LVC_S_ROW
+                                   p_col TYPE LVC_S_COL.
+
+CLEAR GS_DISP2.
+CLEAR GS_DISP_02.
+
+*더블클릭한 ROW
+READ TABLE GT_DISP2 INTO GS_DISP2 INDEX P_ROW-index.
+
+*해당 내용들 가져오기
+SELECT WERKS MATNR LABST
+  INTO CORRESPONDING FIELDS OF TABLE GT_DISP_02
+  FROM MARD
+  WHERE MATNR = GS_DISP2-MATNR.
+
+*screen 띄우기
+  CALL SCREEN '0200' STARTING AT 10 10.
+
+
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_CLOSE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_close .
+
+SELECT K~VBELN, P~POSNR, K~ERDAT, P~MATNR, P~ARKTX, P~KWMENG, P~VRKME, K~KUNNR, K~BSTNK, K~ERNAM
+  FROM VBAP AS P INNER JOIN VBAK AS K
+       ON P~VBELN = K~VBELN
+                 LEFT JOIN ZSO_TABLE_SICS AS A
+       ON P~VBELN = A~VBELN
+
+  INTO CORRESPONDING FIELDS OF TABLE @gt_disp1
+  WHERE K~vbeln IN @s_vbeln AND
+        P~matnr IN @s_matnr AND
+        K~AUDAT IN @S_AUDAT AND
+        K~KUNNR IN @s_patnr AND
+        K~ERNAM IN @S_ERNAM AND
+        A~OCSTT = 'X'. "PR생성 완료된 것들
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_layout .
+
+CLEAR gs_layo.
+"gs_layout-zebra = 'X'.
+gs_layo-cwidth_opt = 'A'.
+gs_layo-no_rowins = 'X'.
+gs_layo-grid_title = 'SO 조회'.
+gs_layo-sel_mode = 'D'.
+
+CLEAR GS_LAYO2.
+gs_layo2-cwidth_opt = 'A'.
+gs_layo2-no_rowins = 'X'.
+gs_layo2-grid_title = 'BOM 계산'.
+gs_layo2-sel_mode = 'D'.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CALC_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM calc_data .
+
+*선택한 줄 확인
+  PERFORM SEL_ROWS1.
+
+*선택한 줄 상대로 LOOP문
+  LOOP AT  gt_rows INTO gs_rows.
+    READ TABLE gt_disp1 INTO gs_disp1 INDEX gs_rows-index.
+
+*BAPI-"CS_BOM_EXPLOSION"
+  PERFORM BAPI_BOM_EXPL.
+
+
+
+  ENDLOOP.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form REFRESH_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM refresh_alv .
+  DATA : LS_STABLE TYPE LVC_S_STBL.
+
+  LS_STABLE-ROW = 'X'.
+  LS_STABLE-COL = 'X'.
+
+  CALL METHOD GO_GRID2->REFRESH_TABLE_DISPLAY
+    EXPORTING
+      IS_STABLE      = LS_STABLE.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_PR
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_pr .
+
+
+*선택한 ROW 확인
+PERFORM SEL_ROWS.
+
+
+*BAPI-"PR_CREATE"
+PERFORM BAPI_PR_CREATE.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form HANDLE_DATA_CHANGED
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ER_DATA_CHANGED
+*&---------------------------------------------------------------------*
+FORM handle_data_changed  USING       ER_data_changed
+                          TYPE REF TO CL_ALV_CHANGED_DATA_PROTOCOL.
+ENDFORM.
+*&---------------------------------------------------------------------*
+FORM bapi_pr_create .
+
+DATA: LV_PRNUM   TYPE BAPIMEREQHEADER-PREQ_NO.
+DATA: LT_RETURN  LIKE TABLE OF BAPIRET2 WITH HEADER LINE,
+      LS_RETURN  LIKE BAPIRET2.
+DATA : S_HEADER  LIKE BAPIMEREQHEADER. "OCCURS 0 WITH HEADER LINE.
+DATA : S_HEADERX LIKE BAPIMEREQHEADERX. "OCCURS 0 WITH HEADER LINE.
+DATA : S_ITEM    LIKE BAPIMEREQITEMIMP OCCURS 0 WITH HEADER LINE.
+DATA : S_ITEMX   LIKE BAPIMEREQITEMX OCCURS 0 WITH HEADER LINE.
+DATA LV_ITEMNUM TYPE I.
+
+LOOP AT GT_ROWS INTO GS_ROWS.
+  READ TABLE gt_disp2 INTO gs_disp2 INDEX gs_rows-index.
+
+******************************************************************HEADER 입력
+S_HEADER-PR_TYPE  = 'NB'.
+S_HEADERX-PR_TYPE = 'X'.
+
+******************************************************************ITEM 입력
+ADD 10 TO LV_ITEMNUM.
+S_ITEM-PREQ_ITEM  = LV_ITEMNUM.       "아이템 넘버
+S_ITEM-MATERIAL   = GS_DISP2-MATNR.   "자재코드
+S_ITEM-PLANT      = GS_DISP2-WERKS.   "플랜트 : 1010 입력
+S_ITEM-QUANTITY   = GS_DISP2-MENGE.   "수량
+S_ITEM-UNIT       = GS_DISP2-MEINS.   "단위
+S_ITEM-PUR_GROUP  = GS_DISP2-EKGRP.   "구매그룹 : SGZ 입력
+S_ITEM-DELIV_DATE = GS_DISP2-BADAT.   "배송날짜(입력 안해도 정상 수행)
+S_ITEM-PREQ_PRICE = '1'.              "VALIDATION PRICE
+APPEND S_ITEM.
+S_ITEMX-PREQ_ITEM  = LV_ITEMNUM.      "아이템넘버
+S_ITEMX-PREQ_ITEMX  = 'X'.            "아이템넘버
+S_ITEMX-MATERIAL   = 'X'.             "자재코드
+S_ITEMX-PLANT      = 'X'.             "플랜트
+S_ITEMX-QUANTITY   = 'X'.             "수량
+S_ITEMX-UNIT       = 'X'.             "단위
+S_ITEMX-PUR_GROUP  = 'X'.             "구매그룹
+S_ITEMX-DELIV_DATE = 'X'.             "배송날짜
+S_ITEMX-PREQ_PRICE = 'X'.             "VALIDATION PRICE
+APPEND S_ITEMX.
+ENDLOOP.
+
+*****************************************************************BAPI 수행
+CALL FUNCTION 'BAPI_PR_CREATE'
+ EXPORTING
+   PRHEADER                      = S_HEADER
+   PRHEADERX                     = S_HEADERX
+ IMPORTING
+   NUMBER                        = LV_PRNUM        "PR NUMBER
+  TABLES
+   RETURN                        = LT_RETURN       "결과값 TABLE
+    PRITEM                       = S_ITEM
+   PRITEMX                       = S_ITEMX.
+
+*****************************************************************성공 유무 확인.
+  READ TABLE LT_RETURN INTO LS_RETURN WITH KEY TYPE = 'E'.
+
+  IF SY-SUBRC = 0.
+      "오류처리
+    CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    MESSAGE S003 DISPLAY LIKE 'E'. "PR생성에 실패하였습니다.
+  ELSE.
+    "성공처리
+    CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+     EXPORTING
+       WAIT = 'X'.
+    MESSAGE S002 WITH LV_PRNUM. "&1 PR생성이 완료되었습니다.
+    "ZSO 테이블에 입력
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SEL_ROWS
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM sel_rows .
+
+
+
+CLEAR GS_ROWS.
+CALL METHOD go_grid2->get_selected_rows
+IMPORTING
+  et_index_rows = gt_rows.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form TYPE_CHECK
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM type_check .
+
+DATA: LT_RETURN LIKE TABLE OF BAPIRET2 WITH HEADER LINE,
+      LS_RETURN LIKE BAPIRET2.
+
+IF LS_RETURN-TYPE = 'E'.
+  "오류처리
+CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+MESSAGE S003 DISPLAY LIKE 'E'.
+ELSE.
+  "성공처리
+  CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+   EXPORTING
+     WAIT = 'X'.
+  MESSAGE S002.
+ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_INSTANCE_002
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_instance_002 .
+
+CREATE OBJECT go_cont3
+  EXPORTING
+    container_name              = 'GO_CONT3'.
+
+CREATE OBJECT go_grid3
+  EXPORTING
+    i_parent          = GO_CONT3.
+
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FIELDCAT_002
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fieldcat_002 .
+
+CLEAR GS_FIELDCAT3.
+GS_FIELDCAT3-FIELDNAME = 'WERKS'.
+GS_FIELDCAT3-COLTEXT = '플랜트'.
+APPEND GS_FIELDCAT3 TO GT_FIELDCAT3.
+
+
+CLEAR GS_FIELDCAT3.
+GS_FIELDCAT3-FIELDNAME = 'MATNR'.
+GS_FIELDCAT3-COLTEXT = '자재'.
+APPEND GS_FIELDCAT3 TO GT_FIELDCAT3.
+
+CLEAR GS_FIELDCAT3.
+GS_FIELDCAT3-FIELDNAME = 'LABST'.
+GS_FIELDCAT3-COLTEXT = '현 재고'.
+APPEND GS_FIELDCAT3 TO GT_FIELDCAT3.
+
+CLEAR GS_FIELDCAT3.
+GS_FIELDCAT3-FIELDNAME = 'UMLME'.
+GS_FIELDCAT3-COLTEXT = '주문재고'.
+APPEND GS_FIELDCAT3 TO GT_FIELDCAT3.
+
+CLEAR GS_FIELDCAT3.
+GS_FIELDCAT3-FIELDNAME = 'TOTAL'.
+GS_FIELDCAT3-COLTEXT = '총 재고'.
+APPEND GS_FIELDCAT3 TO GT_FIELDCAT3.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_ALV_002
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_alv_002 .
+CALL METHOD go_grid3->set_table_for_first_display
+*  EXPORTING
+*    is_layout                     =
+  CHANGING
+    it_outtab                     = GT_DISP_02
+    it_fieldcatalog               = GT_FIELDCAT3.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form REFRESH_ALV_002
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM refresh_alv_002 .
+
+  DATA : LS_STABLE TYPE LVC_S_STBL.
+
+  LS_STABLE-ROW = 'X'.
+  LS_STABLE-COL = 'X'.
+
+  CALL METHOD GO_GRID3->REFRESH_TABLE_DISPLAY
+    EXPORTING
+      IS_STABLE      = LS_STABLE.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SEL_ROWS1
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM sel_rows1 .
+
+  CALL METHOD go_grid1->get_selected_rows
+  IMPORTING
+    et_index_rows = gt_rows.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_BAPI
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_bapi .
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BAPI_BOM_EXPL
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM bapi_bom_expl .
+  DATA : p_werks LIKE marc-werks,
+         p_datuv LIKE stko-datuv,
+         p_stlal LIKE stko-stlal,
+         p_stlan LIKE stzu-stlan.
+  DATA : IT_STBP LIKE TABLE OF CSXGEN,
+         IS_STBP LIKE CSXGEN,
+         it_stbd LIKE TABLE OF CSXDOC,
+         it_stbe LIKE TABLE OF CSXEQUI,
+         it_stbk LIKE TABLE OF CSXKLA,
+         it_stbm LIKE TABLE OF CSXMAT,
+         it_stbt LIKE TABLE OF CSXTPL.
+
+DATA : LV_EMENG TYPE STKO-BMENG.
+lv_EMENG = GS_DISP1-KWMENG.
+
+  CALL FUNCTION 'CS_BOM_EXPLOSION'
+   EXPORTING
+     capid = 'PP01'
+     datuv = sy-datum
+     EMENG = LV_EMENG      "기준수량
+     mehrs = 'X'           "하위LEVEL까지 전개?
+     mtnrv = GS_DISP1-MATNR"자재
+     stlal = '1'
+     stlan = '1'
+     werks = p_werks
+  TABLES
+     stbp = it_stbp    "결과값 들어온 TABLE
+     stbd = it_stbd
+     stbe = it_stbe
+     stbk = it_stbk
+     stbm = it_stbm
+     stbt = it_stbt
+  EXCEPTIONS
+     alt_not_found         = 1
+     call_invalid          = 2
+     missing_authorization = 4
+     no_bom_found          = 5
+     no_plant_data         = 6
+     no_suitable_bom_found = 7
+     conversion_error      = 8
+  OTHERS                = 9.
+
+IF sy-subrc = 0.
+data : is_data type makt.
+*BOM 계산량을 ALV에 띄우기
+    LOOP AT IT_STBP INTO IS_STBP.
+      CLEAR GS_DISP2.
+      MOVE-CORRESPONDING IS_STBP TO GS_DISP2.
+      GS_DISP2-MATNR = IS_STBP-OBJNR.
+      GS_DISP2-MENGE = IS_STBP-MNGLG.
+      GS_DISP2-TMTNR = GS_DISP1-matnr.
+"자재설명 불러오기
+      select single maktx
+        from makt
+        into CORRESPONDING FIELDS OF is_data
+        where matnr = IS_STBP-objnr.
+      GS_DISP2-txz01 = IS_DATA-MAKTX.
+"PLANT, PUR.ORG, DELIV.DATA 디폴트 값
+      GS_DISP2-werks = '1010'.        "PLANT
+      GS_DISP2-EKGRP = 'SGZ'.         "PUR.ORG
+      GS_DISP2-badat = SY-DATUM + 7.  "현재 날짜로부터 일주일 후
+      APPEND GS_DISP2 TO GT_DISP2.
+    ENDLOOP.
+ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BAPI_PR_CREATE1
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM bapi_pr_create1 .
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form HANDLE_HOTSPOT_CLICK
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> E_ROW_ID
+*&      --> E_COLUMN_ID
+*&---------------------------------------------------------------------*
+FORM handle_hotspot_click  USING    e_row_id    TYPE LVC_S_ROW
+                                    e_column_id TYPE LVC_S_COL.
+
+  CLEAR GS_DISP1.
+
+  READ TABLE GT_DISP1 INTO GS_DISP1 INDEX E_ROW_ID-index.
+
+  SET PARAMETER ID 'AUN' FIELD GS_DISP1-vbeln.
+
+  CALL TRANSACTION 'VA03' AND SKIP FIRST SCREEN.
+
+ENDFORM.

@@ -1,0 +1,33 @@
+*&---------------------------------------------------------------------*
+*& Report Z27R0006
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZAI6R_PR MESSAGE-ID Z27M.
+
+INCLUDE ZAI6R_PRCLS.
+INCLUDE ZAI6R_PRTOP.
+INCLUDE ZAI6R_PRSEL.
+INCLUDE ZAI6R_PRI01.
+INCLUDE ZAI6R_PRO01.
+INCLUDE ZAI6R_PRF01.
+
+
+
+INITIALIZATION.
+
+
+
+*조회조건 현재 미완
+START-OF-SELECTION.
+IF P_OPEN = 'X'.
+  PERFORM GET_OPEN. "PR생성 미완
+ELSEIF P_CLOSED = 'X'.
+  PERFORM GET_CLOSE."PR생성 완료
+ELSE.
+  PERFORM GET_ALL.
+ENDIF.
+
+
+*PERFORM GET_DATA.
+CALL SCREEN '0100'.

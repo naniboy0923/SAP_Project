@@ -1,0 +1,22 @@
+*&---------------------------------------------------------------------*
+*& Report ZAI6R_PO
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZAI6R_PO.
+
+INCLUDE ZAI6R_POCLS.
+INCLUDE ZAI6R_POTOP.
+INCLUDE ZAI6R_POSEL.
+INCLUDE ZAI6R_POI01.
+INCLUDE ZAI6R_POO01.
+INCLUDE ZAI6R_POF01.
+
+INITIALIZATION.
+
+START-OF-SELECTION.
+
+  PERFORM GET_DATA.
+  PERFORM BUILD_DATA.
+
+  CALL SCREEN 100.
