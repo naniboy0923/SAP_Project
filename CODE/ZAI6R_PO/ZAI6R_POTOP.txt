@@ -3,18 +3,22 @@
 *&---------------------------------------------------------------------*
 
 TABLES: EBAN,
-        EKPO.
+        EKPO,
+        MARA.
 
 DATA: BEGIN OF GS_DATA,
 
+  BANFN       TYPE EBAN-BANFN,  "PR 번호
   BNFPO       TYPE EBAN-BNFPO,  "자재 번호
   MATNR       TYPE EBAN-MATNR,  "자재 코드
-  BANFN       TYPE EBAN-BANFN,  "PR 번호
   B_MENGE     TYPE EBAN-MENGE,  "PR 수량
   EBELN       TYPE EKPO-EBELN,  "PO 번호
   K_MENGE     TYPE EKPO-MENGE,  "PO 수량
   ORQTY       TYPE EBAN-MENGE,  "발주 수량
   MEINS       TYPE EKPO-MEINS,  "수량 단위
+  LFDAT       TYPE EBAN-LFDAT,  "ITEM DELIVERY DATE
+  PLIFZ       TYPE EBAN-PLIFZ,  "PLANNDED DELIVERY DATE
+  RESDT       TYPE EBAN-LFDAT,  "납품 일자 계산 결과 RESULT DATE
 END OF GS_DATA.
 
 DATA GT_DATA LIKE TABLE OF GS_DATA.
@@ -22,8 +26,8 @@ DATA GT_DATA LIKE TABLE OF GS_DATA.
 DATA: BEGIN OF GS_DISP,
 
   ICON            TYPE ICON-ID,     "아이콘
-  MATNR           TYPE EBAN-MATNR,  "자재 코드
   BANFN           TYPE EBAN-BANFN,  "PR 번호
+  MATNR           TYPE EBAN-MATNR,  "자재 코드
   BNFPO           TYPE EBAN-BNFPO,  "자재 번호
   B_MENGE         TYPE EBAN-MENGE,  "PR 수
   EBELN           TYPE EKPO-EBELN,  "PO 번호
@@ -31,6 +35,7 @@ DATA: BEGIN OF GS_DISP,
   REQTY           TYPE EBAN-MENGE,  "요청 수량
   ORQTY           TYPE EBAN-MENGE,  "발주 수량
   MEINS           TYPE EKPO-MEINS,  "수량 단위
+   RESDT          TYPE EBAN-LFDAT,  "납품 일자 계산 결과 RESULT DATE
   MESSAGE(100)    TYPE C,           "메시지
 END OF GS_DISP.
 

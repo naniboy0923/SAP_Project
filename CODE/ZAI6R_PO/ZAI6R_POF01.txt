@@ -13,7 +13,7 @@ FORM GET_DATA .
 
   "비교 -> 'X'
 
-  SELECT B~BNFPO, B~MATNR, B~BANFN, K~EBELN, B~MENGE AS B_MENGE, K~MENGE AS K_MENGE, B~MEINS
+  SELECT B~BNFPO, B~MATNR, B~BANFN, K~EBELN, B~LFDAT, B~PLIFZ, B~MENGE AS B_MENGE, K~MENGE AS K_MENGE, B~MEINS
     INTO CORRESPONDING FIELDS OF TABLE @GT_DATA
     FROM EBAN AS B LEFT JOIN EKPO AS K ON B~BANFN = K~BANFN
    WHERE B~WERKS IN @S_WERKS
@@ -55,17 +55,18 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM INIT_FCAT .
 
-  PERFORM SET_FCAT USING GT_FCAT  'ICON'      '상태'    'X' '' '' ''.
-  PERFORM SET_FCAT USING GT_FCAT  'MATNR'     '자재 코드' 'X' '' '' ''.
-  PERFORM SET_FCAT USING GT_FCAT  'BANFN'     'PR 번호' '' '' '' ''.
-  PERFORM SET_FCAT USING GT_FCAT  'BNFPO'     '자재 번호' '' '' '' ''.
-  PERFORM SET_FCAT USING GT_FCAT  'B_MENGE'   'PR 수량' '' '' '' 'MEINS'.
-  PERFORM SET_FCAT USING GT_FCAT  'EBELN'     'PO 번호' '' '' '' ''.
-  PERFORM SET_FCAT USING GT_FCAT  'K_MENGE'   'PO 수량' ''  '' '' 'MEINS'.
-  PERFORM SET_FCAT USING GT_FCAT  'REQTY'     '요청 수량' '' '' '' 'MEINS'.
-  PERFORM SET_FCAT USING GT_FCAT  'ORQTY'     '발주 수량' '' 'X' 'X' 'MEINS'.
-  PERFORM SET_FCAT USING GT_FCAT  'MEINS'     '수량 단위' '' ''  '' ''.
-  PERFORM SET_FCAT USING GT_FCAT  'MESSAGE'   '메시지'   ''  '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'ICON'      '상태'    'X' '' '' '' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'BANFN'     'PR 번호' 'X' '' '' '' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'BNFPO'     'ITEM NO.' '' '' '' '' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'MATNR'     '자재 코드' '' '' '' '' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'B_MENGE'   'PR 수량' '' '' '' ''  'EKPO' 'MENGE' 'MEINS'.
+  PERFORM SET_FCAT USING GT_FCAT  'EBELN'     'PO 번호' '' '' '' '' '' '' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'K_MENGE'   'PO 수량' ''  '' '' ''  'EKPO' 'MENGE' 'MEINS'.
+  PERFORM SET_FCAT USING GT_FCAT  'REQTY'     '요청 수량' '' '' '' ''  'EKPO' 'MENGE' 'MEINS'.
+  PERFORM SET_FCAT USING GT_FCAT  'ORQTY'     '발주 수량' '' 'X' 'X' ''  'EKPO' 'MENGE' 'MEINS'.
+  PERFORM SET_FCAT USING GT_FCAT  'MEINS'     '수량 단위' '' ''  '' ''  'EKPO' 'MENGE' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'RESDT'     '납품 일자' '' 'X' '' 'X' 'EBAN' 'LFDAT' ''.
+  PERFORM SET_FCAT USING GT_FCAT  'MESSAGE'   '메시지'   ''  '' '' '' '' '' ''.
 ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form SET_FCAT
@@ -81,6 +82,9 @@ FORM SET_FCAT  USING    P_GT_FCAT LIKE GT_FCAT
                         P_KEY
                         P_EDIT
                         P_ZERO
+                        P_F4AVL
+                        P_REFTABLE
+                        P_REFFIELD
                         P_QFIELDNAME.
 
   CLEAR GS_FCAT.
@@ -89,8 +93,9 @@ FORM SET_FCAT  USING    P_GT_FCAT LIKE GT_FCAT
   GS_FCAT-KEY        = P_KEY.
   GS_FCAT-EDIT       = P_EDIT.
   GS_FCAT-NO_ZERO    = P_ZERO.
-  GS_FCAT-REF_TABLE  = 'EKPO'.
-  GS_FCAT-REF_FIELD  = 'MENGE'."
+  GS_FCAT-F4AVAILABL = P_F4AVL.
+  GS_FCAT-REF_TABLE  = P_REFTABLE.
+  GS_FCAT-REF_FIELD  = P_REFFIELD.
   GS_FCAT-QFIELDNAME = P_QFIELDNAME.
   APPEND GS_FCAT TO P_GT_FCAT.
 
@@ -164,16 +169,36 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM BUILD_DATA .
 
+  DATA LV_PLNDT TYPE DATS.
+
+  LOOP AT GT_DATA INTO GS_DATA.   "납품 일자 계산
+
+    LV_PLNDT = SY-DATUM + GS_DATA-PLIFZ.
+
+    IF GS_DATA-LFDAT < LV_PLNDT. "PR에서 설정한 DELIVERY DATE가 현재 날짜 + PLANNDED DELIVERY TIME보다 이른 경우 (시간이 모자란 경우)
+
+      GS_DATA-RESDT = SY-DATUM + GS_DATA-PLIFZ.
+    ELSEIF GS_DATA-LFDAT >= LV_PLNDT. "PR에서 설정한 DELIVERY DATE가 현재 날짜 + PLANNDED DELIVERY TIME보다 늦은 경우 (시간이 충분한 경우)
+
+      GS_DATA-RESDT = GS_DATA-LFDAT.
+    ENDIF.
+
+    MODIFY GT_DATA FROM GS_DATA.
+  ENDLOOP.
+
   MOVE-CORRESPONDING GT_DATA TO GT_DISP.
 
   CLEAR GS_DISP.
 
-  LOOP AT GT_DISP INTO GS_DISP.
+  LOOP AT GT_DISP INTO GS_DISP.   "요청 수량 계산 및 아이콘 DEFALUT SETTING
 
     GS_DISP-ICON  = ICON_LED_YELLOW.
     GS_DISP-REQTY = GS_DISP-B_MENGE - GS_DISP-K_MENGE.
     MODIFY GT_DISP FROM GS_DISP.
+
   ENDLOOP.
+
+  SORT GT_DISP BY BANFN BNFPO.
 ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form POST_DATA
@@ -184,6 +209,8 @@ ENDFORM.
 *& <--  p2        text
 *&---------------------------------------------------------------------*
 FORM POST_DATA .
+
+  CALL METHOD GO_GRID->CHECK_CHANGED_DATA.
 
   CALL METHOD GO_GRID->GET_SELECTED_ROWS
     IMPORTING
@@ -212,8 +239,9 @@ FORM BAPI_PO_CREATE .
   DATA: LT_BAPIRET2     TYPE TABLE OF BAPIRET2.
   DATA: LS_BAPIRET2     LIKE LINE  OF LT_BAPIRET2.
   DATA: LV_EBELN        TYPE EBELN.
-  DATA: LV_INDEX        TYPE I VALUE 1.
-  "DATA: LV_PO_ITEM      TYPE I VALUE 10.
+  DATA: LV_PO_ITEM      TYPE I VALUE 10.
+
+*  PERFORM ASSEMBLE_SELECTED_ROWS.
 
   LOOP AT GT_INDEX INTO GS_INDEX.
 
@@ -282,13 +310,10 @@ FORM BAPI_PO_CREATE .
       .
 
 
-*    IF LV_EBELN IS NOT INITIAL.
-*     COMMIT
     IF LV_EBELN IS NOT INITIAL.
       CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
         EXPORTING
           WAIT = 'X'.
-
       GS_DISP-ICON    = ICON_LED_GREEN.
       GS_DISP-MESSAGE = LV_EBELN.
       GS_DISP-EBELN   = LV_EBELN.
@@ -300,9 +325,7 @@ FORM BAPI_PO_CREATE .
 *         IMPORTING
 *           RETURN        =
                   .
-
-*      READ TABLE LT_BAPIRET2 INTO LS_BAPIRET2.
-
+*      READ TABLE LT_BAPIRET2 INTO LS_BAPIRET2 INDEX 1.
       GS_DISP-ICON = ICON_LED_RED.
       GS_DISP-MESSAGE = 'ERROR'.
 
@@ -343,13 +366,13 @@ FORM HANDLE_DATA_CHANGED USING PO_DATA_CHANGED
 
   LT_CELLS = PO_DATA_CHANGED->MT_GOOD_CELLS.
 
-  LOOP AT LT_CELLS INTO LS_CELLS.    "PO_DATA_CHANGED가 가지고 있는 INTERNAL TABLE MT_GOOD_CELLS
-
-    CALL METHOD PO_DATA_CHANGED->MODIFY_CELL
-      EXPORTING
-        I_ROW_ID    = LS_CELLS-ROW_ID
-        I_FIELDNAME = LS_CELLS-FIELDNAME
-        I_VALUE     = LS_CELLS-VALUE.
-  ENDLOOP.
+*  LOOP AT LT_CELLS INTO LS_CELLS.    "PO_DATA_CHANGED가 가지고 있는 INTERNAL TABLE MT_GOOD_CELLS
+*
+*    CALL METHOD PO_DATA_CHANGED->MODIFY_CELL
+*      EXPORTING
+*        I_ROW_ID    = LS_CELLS-ROW_ID
+*        I_FIELDNAME = LS_CELLS-FIELDNAME
+*        I_VALUE     = LS_CELLS-VALUE.
+*  ENDLOOP.
 
 ENDFORM.
