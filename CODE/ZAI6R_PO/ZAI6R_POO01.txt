@@ -15,17 +15,45 @@ ENDMODULE.
 *&---------------------------------------------------------------------*
 *&
 *&---------------------------------------------------------------------*
-MODULE SET_ALV OUTPUT.
+MODULE SET_ALV_0100 OUTPUT.
 
-  IF GO_CONTAINER IS INITIAL.
+  IF GO_CONTAINER_0100 IS INITIAL.
 
-    PERFORM CREATE_OBJECT.
-    PERFORM INIT_FCAT.
-    PERFORM INIT_LAYOUT.
-    PERFORM SET_EVENT.
-    PERFORM DISPLAY_ALV.
+    PERFORM CREATE_OBJECT_0100.
+    PERFORM INIT_FCAT_0100.
+    PERFORM INIT_LAYOUT_0100.
+    PERFORM SET_EVENT_0100.
+    PERFORM DISPLAY_ALV_0100.
   ELSE.
 
-    CALL METHOD GO_GRID->REFRESH_TABLE_DISPLAY.
+    CALL METHOD GO_GRID_0100->REFRESH_TABLE_DISPLAY.
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE STATUS_0200 OUTPUT.
+
+  SET PF-STATUS '0200'.
+  SET TITLEBAR '0200'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_ALV_0200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE SET_ALV_0200 OUTPUT.
+
+  IF GO_CONTAINER_0200 IS INITIAL.
+
+    PERFORM CREATE_OBJECT_0200.
+    PERFORM INIT_FCAT_0200.
+    PERFORM INIT_LAYOUT_0200.
+    PERFORM DISPLAY_ALV_0200.
+  ELSE.
+
+    CALL METHOD GO_GRID_0200->REFRESH_TABLE_DISPLAY.
   ENDIF.
 ENDMODULE.
