@@ -11,6 +11,7 @@
 *&---------------------------------------------------------------------*
 FORM set_instance .
 
+
 *MAIN SCREEN
 CREATE OBJECT go_docking
   EXPORTING
@@ -88,7 +89,6 @@ CALL METHOD go_grid2->set_table_for_first_display
     it_fieldcatalog               = gt_fieldcat2.
 
 
-
 ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form SET_FIELDCAT
@@ -103,41 +103,41 @@ FORM set_fieldcat .
 *위쪽 ALV
 CLEAR gt_fieldcat1.
 
-PERFORM get_fcat USING 'VBELN' 'SO번호' 'X' 'X'.
-PERFORM get_fcat USING 'POSNR' 'ITEM No.' '' 'X'.
-PERFORM get_fcat USING 'OCSTT' '상태' '' ''.
-PERFORM get_fcat USING 'AUDAT' 'SO등록일자' '' ''.
-PERFORM get_fcat USING 'MATNR' '자재번호' '' ''.
-PERFORM GET_FCAT USING 'ARKTX' '자재설명' '' ''.
-PERFORM get_fcat USING 'KWMENG' '수량' '' ''.
-PERFORM get_fcat USING 'VRKME' '단위' '' ''.
-PERFORM get_fcat USING 'KUNNR' '고객사' '' ''.
-PERFORM get_fcat USING 'BSTNK' '업체 PO번호' '' ''.
-PERFORM get_fcat USING 'ERNAM' 'SO생성자' '' ''.
-PERFORM get_fcat USING 'BANFN' 'PR번호' '' ''.
-PERFORM get_fcat USING 'BADAT' 'PR생성일' '' ''.
-PERFORM get_fcat USING 'ERNAM1' 'PR생성자' '' ''.
+PERFORM get_fcat USING 'VBELN' 'SO번호' 'X' 'X' ''.
+PERFORM get_fcat USING 'BANFN' 'PR번호' '' '' ''.
+PERFORM get_fcat USING 'POSNR' 'ITEM No.' '' 'X' ''.
+PERFORM get_fcat USING 'AUDAT' 'SO등록일자' '' '' ''.
+PERFORM get_fcat USING 'MATNR' '자재번호' '' '' ''.
+PERFORM GET_FCAT USING 'ARKTX' '자재설명' '' '' ''.
+PERFORM get_fcat USING 'KWMENG' '수량' '' '' ''.
+PERFORM get_fcat USING 'VRKME' '단위' '' '' ''.
+PERFORM get_fcat USING 'KUNNR' '고객사' '' '' ''.
+PERFORM get_fcat USING 'BSTNK' '업체 PO번호' '' '' ''.
+PERFORM get_fcat USING 'ERNAM' 'PR생성자' '' '' ''.
+PERFORM get_fcat USING 'ERDAT' 'PR생성일' '' '' ''.
+*PERFORM get_fcat USING 'ERNAM1' 'PR생성자' '' '' ''.
 
 
 *아래쪽 ALV
 CLEAR gt_fieldcat2.
 
-PERFORM get_fcat2 USING 'ICON' '상태' '' '' ''.
-PERFORM get_fcat2 USING 'MATNR' '자재번호' '' '' ''.
-PERFORM GET_FCAT2 USING 'TXZ01' '자재설명' '' '' ''.
-PERFORM GET_FCAT2 USING 'TMTNR' '상위자재' '' '' ''.
-PERFORM get_fcat2 USING 'MENGE' '수량' '' '' ''.
-PERFORM get_fcat2 USING 'MEINS' '단위' '' '' ''.
-PERFORM get_fcat2 USING 'BADAT' '배송일자' 'X' '' ''.
-PERFORM get_fcat2 USING 'WERKS' 'PLANT' 'X' 'EBAN' ''.
-PERFORM get_fcat2 USING 'EKGRP' 'Pur.Grp' 'X' 'EBAN' ''.
-PERFORM get_fcat2 USING 'ICON2' '재고상태' '' '' ''.
-PERFORM get_fcat2 USING 'LABST' '현 재고' '' '' ''.
-PERFORM get_fcat2 USING 'LFMON' '주문 재고' '' '' ''.
-PERFORM get_fcat2 USING 'TOTAL' '총 재고' '' '' ''.
-PERFORM GET_FCAT2 USING 'EISBE' '안전 재고' '' '' ''.
-PERFORM get_fcat2 USING 'PRNUM' 'PR 번호' '' '' 'X'.
-PERFORM get_fcat2 USING 'MESGE' 'PR생성 결과' '' '' ''.
+PERFORM get_fcat2 USING 'ICON' '상태' '' '' '' '' ''.
+PERFORM get_fcat2 USING 'MATNR' '자재번호' '' '' '' 'X' ''.
+PERFORM GET_FCAT2 USING 'TXZ01' '자재설명' '' '' '' '' ''.
+PERFORM GET_FCAT2 USING 'TMTNR' '상위자재' '' '' '' '' ''.
+PERFORM GET_FCAT2 USING 'VBELN' 'SO번호' '' '' '' '' ''.
+PERFORM get_fcat2 USING 'MENGE' '수량' 'X' '' '' '' ''.
+PERFORM get_fcat2 USING 'MEINS' '단위' '' '' '' '' ''.
+PERFORM get_fcat2 USING 'BADAT' '배송일자' 'X' '' '' '' ''.
+PERFORM get_fcat2 USING 'WERKS' 'PLANT' 'X' 'EBAN' '' '' ''.
+PERFORM get_fcat2 USING 'EKGRP' 'Pur.Grp' 'X' 'EBAN' '' '' ''.
+PERFORM get_fcat2 USING 'ICON2' '재고상태' '' '' '' '' 'C300'.
+PERFORM get_fcat2 USING 'LABST' '현 재고' '' '' '' '' 'C300'.
+PERFORM get_fcat2 USING 'LFMON' '주문 재고' '' '' '' '' 'C300'.
+PERFORM get_fcat2 USING 'TOTAL' '총 재고' '' '' '' '' 'C300'.
+PERFORM GET_FCAT2 USING 'EISBE' '안전 재고' '' '' '' '' 'C300'.
+PERFORM get_fcat2 USING 'PRNUM' 'PR 번호' '' '' 'X' '' ''.
+PERFORM get_fcat2 USING 'MESGE' 'PR생성 결과' '' '' '' '' ''.
 
 
 
@@ -154,13 +154,15 @@ ENDFORM.
 FORM get_fcat  USING    VALUE(p_NAME)
                         VALUE(p_TEXT)
                         VALUE(P_HSPOT)
-                        VALUE(P_KEY).
+                        VALUE(P_KEY)
+                        VALUE(P_COLOR).
 
 CLEAR gs_fieldcat1.
 gs_fieldcat1-fieldname = p_name.
 gs_fieldcat1-coltext   = p_text.
 GS_fIELDCAT1-HOTSPOT   = P_HSPOT.
 GS_FIELDCAT1-KEY       = P_KEY.
+GS_FIELDCAT1-EMPHASIZE = P_COLOR.
 APPEND gs_fieldcat1 TO gt_fieldcat1.
 
 ENDFORM.
@@ -176,7 +178,9 @@ FORM get_fcat2  USING    VALUE(p_NAME)
                          VALUE(p_TEXT)
                          VALUE(P_EDIT)
                          VALUE(P_REFF)
-                         VALUE(P_HSPOT).
+                         VALUE(P_HSPOT)
+                         VALUE(P_KEY)
+                         VALUE(P_COLOR).
 
 CLEAR gs_fieldcat2.
 gs_fieldcat2-fieldname = p_name.
@@ -184,6 +188,8 @@ gs_fieldcat2-coltext   = p_text.
 GS_fIELDCAT2-EDIT      = P_EDIT.
 GS_FIELDCAT2-REF_TABLE = P_REFF.
 GS_FIELDCAT2-HOTSPOT   = P_HSPOT.
+GS_FIELDCAT2-KEY       = P_KEY.
+GS_FIELDCAT2-EMPHASIZE = P_COLOR.
 APPEND gs_fieldcat2 TO gt_fieldcat2.
 
 ENDFORM.
@@ -208,6 +214,7 @@ SELECT K~VBELN P~POSNR K~AUDAT P~MATNR P~ARKTX P~KWMENG P~VRKME K~KUNNR K~BSTNK 
         P~matnr IN s_matnr AND
         K~AUDAT IN S_AUDAT AND
         K~KUNNR IN s_patnr AND
+        K~BSTNK IN S_BSTNK AND
         K~ERNAM IN S_ERNAM.
 
 ENDFORM.
@@ -221,11 +228,11 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM get_open .
 
-SELECT K~VBELN, P~POSNR, K~AUDAT, P~MATNR, P~ARKTX, P~KWMENG, P~VRKME, K~KUNNR, K~BSTNK, K~ERNAM", BANFN, BADAT(PR정보)
+SELECT K~VBELN, P~POSNR, K~AUDAT, P~MATNR, P~ARKTX, P~KWMENG, P~VRKME, K~KUNNR, K~BSTNK "Z~BANFN, Z~ERNAM, Z~ERDAT
 
   FROM VBAK AS K LEFT JOIN ZSO_MANAGE AS Z ON K~VBELN = Z~VBELN
                  LEFT JOIN VBAP AS P ON K~VBELN = P~VBELN
-                 "LEFT JOIN EBAN AS E ON K~
+
 
   INTO CORRESPONDING FIELDS OF TABLE @GT_DISP1
 
@@ -234,6 +241,7 @@ SELECT K~VBELN, P~POSNR, K~AUDAT, P~MATNR, P~ARKTX, P~KWMENG, P~VRKME, K~KUNNR, 
         P~matnr IN @s_matnr AND
         K~AUDAT IN @S_AUDAT AND
         K~KUNNR IN @s_patnr AND
+        K~BSTNK IN @S_BSTNK AND
         K~ERNAM IN @S_ERNAM.
 
 
@@ -251,18 +259,16 @@ FORM set_event .
 
 CREATE OBJECT GO_EVENT_RECEIVER.
 
-*SET HANDLER GO_EVENT_RECEIVER->HANDLE_DOUBLE_CLICK FOR GO_GRID2.
 SET HANDLER GO_EVENT_RECEIVER->HANDLE_DATA_CHANGED FOR GO_GRID2.
 SET HANDLER GO_EVENT_RECEIVER->HANDLE_HOTSPOT_CLICK FOR GO_GRID1.
 SET HANDLER GO_EVENT_RECEIVER->HANDLE_HOTSPOT_CLICK FOR GO_GRID2.
+SET HANDLER GO_EVENT_RECEIVER->HANDLE_TOOLBAR FOR GO_GRID2.
+SET HANDLER GO_EVENT_RECEIVER->HANDLE_USER_COMMAND FOR GO_GRID2.
 
 *EVENT 자체가 발생했는지?
 CALL METHOD go_grid2->register_edit_event
   EXPORTING
     i_event_id = GO_GRID2->MC_EVT_MODIFIED
-*  EXCEPTIONS
-*    error      = 1
-*    others     = 2
         .
 IF sy-subrc <> 0.
 * Implement suitable error handling here
@@ -313,7 +319,7 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM get_close .
 
-SELECT K~VBELN, P~POSNR, K~AUDAT, P~MATNR, P~ARKTX, P~KWMENG, P~VRKME, K~KUNNR, K~BSTNK, K~ERNAM", BANFN, BADAT(PR정보)
+SELECT K~VBELN, P~POSNR, K~AUDAT, P~MATNR, P~ARKTX, P~KWMENG, P~VRKME, K~KUNNR, K~BSTNK,Z~BANFN, Z~ERNAM, Z~ERDAT", BANFN, BADAT(PR정보)
 
   FROM VBAK AS K LEFT JOIN ZSO_MANAGE AS Z ON K~VBELN = Z~VBELN
                  LEFT JOIN VBAP AS P ON K~VBELN = P~VBELN
@@ -326,6 +332,7 @@ SELECT K~VBELN, P~POSNR, K~AUDAT, P~MATNR, P~ARKTX, P~KWMENG, P~VRKME, K~KUNNR, 
         P~matnr IN @s_matnr AND
         K~AUDAT IN @S_AUDAT AND
         K~KUNNR IN @s_patnr AND
+        K~BSTNK IN @S_BSTNK AND
         K~ERNAM IN @S_ERNAM.
 
 ENDFORM.
@@ -340,17 +347,19 @@ ENDFORM.
 FORM set_layout .
 
 CLEAR gs_layo.
-"gs_layout-zebra = 'X'.
+gs_layo-zebra = 'X'.
 gs_layo-cwidth_opt = 'A'.
 gs_layo-no_rowins = 'X'.
-gs_layo-grid_title = 'SO 조회'.
+gs_layo-grid_title = '판매 오더 조회'.
 gs_layo-sel_mode = 'D'.
 
 CLEAR GS_LAYO2.
+GS_LAYO2-ZEBRA = 'X'.
 gs_layo2-cwidth_opt = 'A'.
-gs_layo2-no_rowins = 'X'.
-gs_layo2-grid_title = 'BOM 계산'.
+*gs_layo2-no_rowins = 'X'.
+gs_layo2-grid_title = '소요량 계산 및 구매요청 생성'.
 gs_layo2-sel_mode = 'D'.
+
 
 
 ENDFORM.
@@ -364,16 +373,17 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM calc_data .
 
+CLEAR GT_DISP2.
+
 *선택한 줄 확인
   PERFORM SEL_ROWS1.
 
 *선택한 줄 상대로 LOOP문
-  LOOP AT  gt_rows INTO gs_rows.
-    READ TABLE gt_disp1 INTO gs_disp1 INDEX gs_rows-index.
+  LOOP AT  gt_rows1 INTO gs_rows1.
+    READ TABLE gt_disp1 INTO gs_disp1 INDEX gs_rows1-index.
 
 *BAPI-"CS_BOM_EXPLOSION"
   PERFORM BAPI_BOM_EXPL.
-
 
 
   ENDLOOP.
@@ -408,13 +418,13 @@ FORM create_pr .
 
 
 *선택한 ROW 확인
-PERFORM SEL_ROWS.
+  PERFORM SEL_ROWS.
 
 *데이터 유효성 검증(필수값 유무, 잘못된 값)
-PERFORM CHECK_DATA.
+  PERFORM CHECK_DATA.
 
 *BAPI-"PR_CREATE"
-PERFORM BAPI_PR_CREATE.
+  PERFORM BAPI_PR_CREATE.
 
 
 
@@ -432,30 +442,46 @@ FORM handle_data_changed  USING       ER_data_changed
 ENDFORM.
 *&---------------------------------------------------------------------*
 FORM bapi_pr_create .
-
 DATA: LV_PRNUM   TYPE BAPIMEREQHEADER-PREQ_NO.
 DATA: LT_RETURN  LIKE TABLE OF BAPIRET2 WITH HEADER LINE,
       LS_RETURN  LIKE BAPIRET2.
 DATA : S_HEADER  LIKE BAPIMEREQHEADER. "OCCURS 0 WITH HEADER LINE.
 DATA : S_HEADERX LIKE BAPIMEREQHEADERX. "OCCURS 0 WITH HEADER LINE.
 DATA : S_ITEM    LIKE BAPIMEREQITEMIMP OCCURS 0 WITH HEADER LINE.
+DATA : S_ITEM_T  LIKE BAPIMEREQITEMIMP OCCURS 0 WITH HEADER LINE.
 DATA : S_ITEMX   LIKE BAPIMEREQITEMX OCCURS 0 WITH HEADER LINE.
 DATA LV_ITEMNUM TYPE I.
+DATA: LS_DATA LIKE ZSO_MANAGE.
+DATA : LT_DATA LIKE TABLE OF LS_DATA.
+DATA : LT_DISP2 LIKE TABLE OF GS_DISP2.
+DATA : LS_DISP2 LIKE GS_DISP2.
+CLEAR LS_DATA.
 CLEAR LS_RETURN.
 
-LOOP AT GT_ROWS INTO GS_ROWS.
-  READ TABLE gt_disp2 INTO gs_disp2 INDEX gs_rows-index.
+CLEAR LT_DISP2.
+LOOP AT GT_ROWS2 INTO GS_ROWS2.
+  READ TABLE gt_disp2 INTO gs_disp2 INDEX gs_rows2-index.
+  APPEND GS_DISP2 TO LT_DISP2.
+ENDLOOP.
 
+SORT LT_DISP2 BY MATNR.
+
+
+LOOP AT LT_DISP2 INTO LS_DISP2.
 ******************************************************************HEADER 입력
 S_HEADER-PR_TYPE  = 'NB'.
 S_HEADERX-PR_TYPE = 'X'.
 
 ******************************************************************ITEM 입력
+GS_DISP2 = LS_DISP2.   "LS_DISP2가 SUM된 값을 가지고 있다.
+AT NEW MATNR.          "MATNR이 바뀔 때마다 처리
+  SUM.                 "MATNR이 바뀔 때마다 번호가 같은 애들끼리 수량과 금액 SUM
+
 ADD 10 TO LV_ITEMNUM.
 S_ITEM-PREQ_ITEM  = LV_ITEMNUM.       "아이템 넘버
 S_ITEM-MATERIAL   = GS_DISP2-MATNR.   "자재코드
 S_ITEM-PLANT      = GS_DISP2-WERKS.   "플랜트 : 1010 입력
-S_ITEM-QUANTITY   = GS_DISP2-MENGE.   "수량
+S_ITEM-QUANTITY   = LS_DISP2-MENGE.   "수량
 S_ITEM-UNIT       = GS_DISP2-MEINS.   "단위
 S_ITEM-PUR_GROUP  = GS_DISP2-EKGRP.   "구매그룹 : SGZ 입력
 S_ITEM-DELIV_DATE = GS_DISP2-BADAT.   "배송날짜(입력 안해도 정상 수행)
@@ -471,6 +497,7 @@ S_ITEMX-PUR_GROUP  = 'X'.             "구매그룹
 S_ITEMX-DELIV_DATE = 'X'.             "배송날짜
 S_ITEMX-PREQ_PRICE = 'X'.             "VALIDATION PRICE
 APPEND S_ITEMX.
+ENDAT.
 ENDLOOP.
 
 *****************************************************************BAPI 수행
@@ -485,57 +512,42 @@ CALL FUNCTION 'BAPI_PR_CREATE'
     PRITEM                       = S_ITEM
    PRITEMX                       = S_ITEMX.
 *****************************************************************성공 유무 확인.
+  CLEAR GS_DISP2.
   READ TABLE LT_RETURN INTO LS_RETURN WITH KEY TYPE = 'E'.
 
   IF SY-SUBRC = 0.
-      "오류처리
+    "오류처리
     CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
-    READ TABLE LT_RETURN INTO LS_RETURN WITH KEY type = 'E'      "LS_RETURN에 있는 메시지 ALV에 띄워주기?
+    READ TABLE LT_RETURN INTO LS_RETURN WITH KEY type = 'E'      "LT_RETURN = 오류 메세지
                                                  id   = 'ME'.
-    LOOP AT GT_ROWS INTO GS_ROWS.
-      GS_DISP2-MESGE = LS_RETURN-message.
-      GS_DISP2-ICON  = ICON_LED_RED.
-      MODIFY GT_DISP2 FROM GS_DISP2 INDEX GS_ROWS-INDEX.
+    LOOP AT GT_ROWS2 INTO GS_ROWS2.                                "PR생성하려고 선택한 ROWS들 LOOP문
+      READ TABLE GT_DISP2 INTO GS_DISP2 INDEX gs_rows2-index.
+      GS_DISP2-ICON  = ICON_LED_RED.                             "오류 아이콘 처리
+      IF LS_RETURN-message_v2 = GS_DISP2-MATNR.
+         GS_DISP2-MESGE = LS_RETURN-message.                     "오류 메시지 처리
+      ENDIF.
+      MODIFY GT_DISP2 FROM GS_DISP2 INDEX GS_ROWS2-INDEX.         "ALV에 띄우기
     ENDLOOP.
     MESSAGE S003 DISPLAY LIKE 'E'. "PR생성에 실패하였습니다.
+
   ELSE.
-    "성공처리
-    CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
-     EXPORTING
-       WAIT = 'X'.
-*==========================================수정: ★성민★최고★ ===============
-       LOOP AT GT_ROWS INTO GS_ROWS.
-         GS_DISP2-PRNUM = LV_PRNUM.
-         GS_DISP2-ICON  = ICON_LED_GREEN.
-         GS_DISP2-MESGE = 'PR생성이 완료되었습니다.'.
-        MODIFY GT_DISP2 FROM GS_DISP2 INDEX GS_ROWS-INDEX.
-       ENDLOOP.
-*==================================================================
+GV_PRNUM = LV_PRNUM. "PR번호를 전역변수에
+PERFORM BAPI_COMMIT. "성공처리 로직
 
-    MESSAGE S002 WITH LV_PRNUM. "&1 PR생성이 완료되었습니다.
 *********ZSO 테이블에 입력**********************************************
-  DATA : BEGIN OF LS_DATA,
-         MANDT TYPE SY-MANDT,
-         VBELN TYPE ZSO_MANAGE-vbeln,                   "SO번호
-         BANFN TYPE ZSO_MANAGE-banfn,                   "PR번호
-         END OF LS_DATA.
-  DATA : LT_DATA LIKE TABLE OF LS_DATA.
-  CLEAR LS_DATA.
-
   LS_DATA-MANDT = SY-MANDT.
   LS_DATA-banfn = LV_PRNUM.                             "PR번호 LS_DATA로 입력
+  LS_DATA-ERNAM = SY-UNAME.
+  LS_DATA-ERDAT = SY-DATUM.
+  LS_DATA-ERZET = SY-UZEIT.
 
-  LOOP AT  gt_rows INTO gs_rows.                        "SO번호 LS_DATA로 입력
-    READ TABLE gt_disp1 INTO gs_disp1 INDEX gs_rows-index.
-    LS_DATA-vbeln = GS_DISP1-VBELN.
+  LOOP AT  gt_rows2 INTO gs_rows2.                        "SO번호 LS_DATA로 입력
+    READ TABLE gt_disp2 INTO gs_disp2 INDEX gs_rows2-index.
+    LS_DATA-vbeln = GS_DISP2-VBELN.
     APPEND LS_DATA TO LT_DATA.                        "LT_DATA에 현재 PR 생성된 PRNUM과 SONUM 추가
   ENDLOOP.
 
-*  LOOP AT LT_DATA INTO LS_DATA.
-*    UPDATE ZSO_MANAGE FROM TABLE LT_DATA.
   INSERT ZSO_MANAGE FROM TABLE LT_DATA ACCEPTING DUPLICATE KEYS.
-
-*  ENDLOOP.
   ENDIF.
 
 ENDFORM.
@@ -549,12 +561,10 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM sel_rows .
 
-
-
-CLEAR GS_ROWS.
+CLEAR GS_ROWS2.
 CALL METHOD go_grid2->get_selected_rows
 IMPORTING
-  et_index_rows = gt_rows.
+  et_index_rows = gt_rows2.
 
 ENDFORM.
 *&---------------------------------------------------------------------*
@@ -652,12 +662,12 @@ ENDFORM.
 *& <--  p2        text
 *&---------------------------------------------------------------------*
 FORM create_alv_002 .
-CALL METHOD go_grid3->set_table_for_first_display
-*  EXPORTING
-*    is_layout                     =
-  CHANGING
-    it_outtab                     = GT_DISP_02
-    it_fieldcatalog               = GT_FIELDCAT3.
+*CALL METHOD go_grid3->set_table_for_first_display
+**  EXPORTING
+**    is_layout                     =
+*  CHANGING
+*    it_outtab                     = GT_DISP_02
+*    it_fieldcatalog               = GT_FIELDCAT3.
 
 ENDFORM.
 *&---------------------------------------------------------------------*
@@ -692,7 +702,7 @@ FORM sel_rows1 .
 
   CALL METHOD go_grid1->get_selected_rows
   IMPORTING
-    et_index_rows = gt_rows.
+    et_index_rows = gt_rows1.
 
 ENDFORM.
 *&---------------------------------------------------------------------*
@@ -757,7 +767,8 @@ CALL FUNCTION 'CS_BOM_EXPL_MAT_V2'
    OTHERS                      = 9.
 IF sy-subrc = 0.
 PERFORM CS_BOM_EXPL.
-*******BOM 계산량을 ALV에 띄우기***************************************************
+*******BOM 계산량 -> ALV*************************************************************
+CLEAR GS_DISP2.
 LOOP AT IT_STB INTO IS_STB.
   IF IS_STB-MTART <> 'ROH'.
     CONTINUE.
@@ -767,6 +778,7 @@ LOOP AT IT_STB INTO IS_STB.
     GS_DISP2-MENGE = IS_STB-MNGLG.   "BOM 수량
     GS_DISP2-TMTNR = GS_DISP1-matnr. "상위자재
     GS_DISP2-MATNR = IS_STB-IDNRK.   "자재명
+    GS_DISP2-VBELN = GS_DISP1-VBELN. "SO번호
 
 *******현 재고 불러오기***********************************************************
     clear ls_data.
@@ -776,7 +788,7 @@ LOOP AT IT_STB INTO IS_STB.
       WHERE MATNR = IS_STB-IDNRK.
       GS_DISP2-LABST = LS_DATA-LABST. "재고 / 현재 1개의 창고 재고만 불러오는데, 6조는 창고릃 하나만 쓰기 때문에 아직 합계는 구현하지 않은 상태임.
 
-*******주문재고-PO넣은 물량 합계**************************************************
+*******주문재고-PO 물량 합계**************************************************
     SELECT MATNR WERKS MENGE
     FROM EKPO
     INTO CORRESPONDING FIELDS OF TABLE GT_DATA_P
@@ -786,7 +798,7 @@ LOOP AT IT_STB INTO IS_STB.
       LOOP AT GT_DATA_P.
         COLLECT GT_DATA_P INTO LT_DATA_P.
       ENDLOOP.
-*******주문재고-GR된 물량 합계********************************************************
+*******주문재고-GR 물량 합계********************************************************
     SELECT MATNR WERKS MENGE
     FROM EKBE
     INTO CORRESPONDING FIELDS OF TABLE GT_DATA_B
@@ -819,12 +831,15 @@ LOOP AT IT_STB INTO IS_STB.
       ELSEIF GS_DISP2-TOTAL < GS_DISP2-EISBE.
         GS_DISP2-ICON2  = ICON_RED_LIGHT.
       ENDIF.
-
+*COLLECT GS_DISP2 INTO GT_DISP2. "merge
 "PLANT, PUR.ORG, DELIV.DATA 디폴트 값
     PERFORM CALL_DEFAULT.
     APPEND GS_DISP2 TO GT_DISP2.
   ENDIF.
 ENDLOOP.
+
+*MERGE
+
 
 ENDIF.
 
@@ -848,20 +863,224 @@ ENDFORM.
 *&      --> E_ROW_ID
 *&      --> E_COLUMN_ID
 *&---------------------------------------------------------------------*
-FORM handle_hotspot_click  USING    e_row_id    TYPE LVC_S_ROW
+FORM handle_hotspot_click  USING    sender
+                                    e_row_id    TYPE LVC_S_ROW
                                     e_column_id TYPE LVC_S_COL.
-*DISP1 HOSTPOT
-  CLEAR GS_DISP1.
-  READ TABLE GT_DISP1 INTO GS_DISP1 INDEX E_ROW_ID-index.
-  SET PARAMETER ID 'AUN' FIELD GS_DISP1-vbeln.
-  CALL TRANSACTION 'VA03' AND SKIP FIRST SCREEN.
+
+CASE SENDER.
+  WHEN GO_GRID1.
+   CLEAR GS_DISP1.
+   READ TABLE GT_DISP1 INTO GS_DISP1 INDEX E_ROW_ID-index.
+   SET PARAMETER ID 'AUN' FIELD GS_DISP1-vbeln.
+   CALL TRANSACTION 'VA03' AND SKIP FIRST SCREEN.
+  WHEN GO_GRID2.
+    CLEAR GS_DISP2.
+    READ TABLE GT_DISP2 INTO GS_DISP2 INDEX E_ROW_ID-INDEX.
+    SET PARAMETER ID 'BAN' FIELD GS_DISP2-PRNUM.
+    CALL TRANSACTION 'ME53N' AND SKIP FIRST SCREEN.
+ENDCASE.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_SORT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_sort .
+
+  CLEAR: GS_SORT, GT_SORT.
+
+  GS_SORT-SPOS      = '1'.
+  GS_SORT-FIELDNAME = 'VBELN'.
+  GS_SORT-UP        = 'X'.
+  APPEND GS_SORT TO GT_SORT.
+
+  GS_SORT-SPOS      = '2'.
+  GS_SORT-FIELDNAME = 'BANFN'.
+  GS_SORT-UP        = 'X'.
+  APPEND GS_SORT TO GT_SORT.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CHECK_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM check_data .
+
+LOOP AT GT_DISP2 INTO GS_DISP2.
+
+*PR생성할 줄을 선택하지 않았을 시(GT_ROWS로?)
+IF GT_ROWS2 IS INITIAL.
+  GS_DISP2-ICON  = ICON_LED_RED.
+  GS_DISP2-MESGE = '자재를 선택해주세요.'.
+
+*DELIV.DATE가 날짜 형식이 아닐 시
+
+*필수필드(PLANT와 PUR.ORG)를 입력하지 않았을 시
+ELSEIF GS_DISP2-werks IS INITIAL OR
+       GS_DISP2-EKGRP IS INITIAL.
+  GS_DISP2-ICON  = ICON_LED_RED.
+  GS_DISP2-MESGE = 'PLANT와 Pur.org를 입력해주세요.'.
+
+ENDIF.
+
+MODIFY GT_DISP2 FROM GS_DISP2.
+ENDLOOP.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CALL_MAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM call_mat .
 
 
-*DISP2 HOTSPOT
-  CLEAR GS_DISP2.
-  READ TABLE GT_DISP2 INTO GS_DISP2 INDEX E_ROW_ID-INDEX.
-  SET PARAMETER ID 'BAN' FIELD GS_DISP2-prnum.
-  CALL TRANSACTION 'ME53N' AND SKIP FIRST SCREEN. "처음에 뜨는 창 이유..?
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CALL_DEFAULT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM call_default .
+  GS_DISP2-werks = '1010'.        "PLANT
+  GS_DISP2-EKGRP = 'SGZ'.         "PUR.ORG
+  GS_DISP2-badat = SY-DATUM + 7.  "현재 날짜로부터 일주일 후
+  GS_DISP2-ICON  = ICON_LED_YELLOW.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form HANDLE_TOOLBAR
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> E_OBJECT
+*&      --> E_INTERACTIVE
+*&---------------------------------------------------------------------*
+FORM handle_toolbar  USING    R_object TYPE REF TO CL_ALV_EVENT_TOOLBAR_SET
+                              R_interactive.
+DATA : ls_toolbar  TYPE stb_button.
+
+    CLEAR ls_toolbar.
+    MOVE 3                 TO ls_toolbar-butn_type.
+    APPEND ls_toolbar      TO r_object->mt_toolbar.
+
+    CLEAR ls_toolbar.
+
+    MOVE 'DEL'            TO ls_toolbar-function. "INT에 APPEND
+    MOVE icon_delete_row TO ls_toolbar-icon.
+    MOVE '행삭제'          TO ls_toolbar-quickinfo.
+    MOVE '행삭제'          TO ls_toolbar-text.
+    MOVE ' '               TO ls_toolbar-disabled.
+    APPEND ls_toolbar TO r_object->mt_toolbar.
+*  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form HANDLE_USER_COMMAND
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> E_UCOMM
+*&---------------------------------------------------------------------*
+FORM handle_user_command  USING    R_ucomm.
+
+DATA : lt_rows TYPE lvc_t_row,
+         ls_rows LIKE LINE OF lt_rows.
+  DATA: l_scroll TYPE lvc_s_stbl.
 
 
+  CASE r_ucomm.
+*    WHEN 'ADD'.
+*      APPEND gs_tab TO gt_tab.
+
+    WHEN 'DEL'.
+      CALL METHOD GO_GRID2->get_selected_rows
+        IMPORTING
+          et_index_rows = lt_rows. "alv에서 선택된 라인이 it_rows에 들어간다.
+
+      DESCRIBE TABLE lt_rows LINES sy-tfill.
+
+      IF sy-tfill = 0.
+        MESSAGE i000 WITH '항목을 선택하세요'.
+        EXIT.
+      ELSE.
+        LOOP AT lt_rows INTO ls_rows.
+          READ TABLE gt_DISP2 INTO GS_DISP2 INDEX ls_rows-index.
+          gs_DISP2-MARK = 'X'.
+          MODIFY GT_DISP2 FROM GS_DISP2 INDEX ls_rows-index TRANSPORTING MARK.
+          MOVE-CORRESPONDING GS_DISP2 TO GS_DEL.
+          APPEND gs_del TO gt_del.
+        ENDLOOP.
+        DELETE GT_DISP2 WHERE MARK = 'X'.
+      ENDIF.
+  ENDCASE.
+
+*  l_scroll-row = 'X'.
+*  l_scroll-col = 'X'.
+*  CALL METHOD g_alv->refresh_table_display
+*    EXPORTING
+*      i_soft_refresh = ''
+*      is_stable      = l_scroll.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form REFRESH_ALV1
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM refresh_alv1 .
+  DATA : LS_STABLE TYPE LVC_S_STBL.
+
+  LS_STABLE-ROW = 'X'.
+  LS_STABLE-COL = 'X'.
+
+  CALL METHOD GO_GRID1->REFRESH_TABLE_DISPLAY
+    EXPORTING
+      IS_STABLE      = LS_STABLE.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BAPI_COMMIT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM bapi_commit .
+    "성공처리
+    CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+     EXPORTING
+       WAIT = 'X'.
+       LOOP AT GT_ROWS2 INTO GS_ROWS2.                             "PR생성하려고 선택한 ROWS들 LOOP문
+        READ TABLE GT_DISP2 INTO GS_DISP2 INDEX gs_rows2-index.
+         GS_DISP2-PRNUM = GV_PRNUM.                              "생성된 PR넘버
+         GS_DISP2-ICON  = ICON_LED_GREEN.                        "성공 아이콘 처리
+         GS_DISP2-MESGE = 'PR생성이 완료되었습니다.'.                  "성공 메시지 처리
+        MODIFY GT_DISP2 FROM GS_DISP2 INDEX GS_ROWS2-INDEX.       "ALV에 띄우기
+       ENDLOOP.
+
+        LOOP AT GT_ROWS1 INTO GS_ROWS1.
+        READ TABLE GT_DISP1 INTO GS_DISP1 INDEX GS_ROWS1-INDEX.
+          IF SY-SUBRC = 0.
+            GS_DISP1-BANFN = GV_PRNUM.                              "LV_PRNUM(PR번호) 왼쪽 ALV에
+            MODIFY GT_DISP1 FROM GS_DISP1 INDEX GS_ROWS1-INDEX.
+          ENDIF.
+        ENDLOOP.
+        PERFORM REFRESH_ALV1.
+    MESSAGE S002 WITH GV_PRNUM. "&1 PR생성이 완료되었습니다.
 ENDFORM.
