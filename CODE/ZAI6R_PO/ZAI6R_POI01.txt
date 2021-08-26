@@ -27,3 +27,31 @@ MODULE EXIT_0100 INPUT.
 
   LEAVE TO SCREEN 0.
 ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE EXIT_0200 INPUT.
+
+  LEAVE TO SCREEN 0.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_0200 INPUT.
+
+  GV_UCOMM = GV_OKCODE.
+  CLEAR GV_OKCODE.
+
+  IF GV_UCOMM = 'CONTINUE'.
+
+    PERFORM INPUT_VENDOR.
+
+  ELSEIF GV_UCOMM = 'CANCEL'.
+
+    LEAVE TO SCREEN 0.
+  ENDIF.
+ENDMODULE.
