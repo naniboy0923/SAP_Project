@@ -7,7 +7,10 @@ TABLES: EBAN,
         MARA,
         MAKT,
         MARC,
-        EORD.
+        EORD,
+        EINA.
+
+* ------------------------------------------- 메인 테이블 ------------------------------------------- *
 
 DATA: BEGIN OF GS_DATA,
 
@@ -25,13 +28,18 @@ DATA: BEGIN OF GS_DATA,
   MEINS           TYPE EKPO-MEINS,  "수량 단위
   LFDAT           TYPE EBAN-LFDAT,  "ITEM DELIVERY DATE
   LIFNR           TYPE EORD-LIFNR,  "공급자
+  NAME1           TYPE LFA1-NAME1,  "공급자 DESCRIPTION
   PLIFZ           TYPE MARC-PLIFZ,  "PLANNDED DELIVERY DATE
   RESDT           TYPE EBAN-LFDAT,  "납품 일자 계산 결과 RESULT DATE
   MESSAGE(100)    TYPE C,           "메시지
+  BADAT           TYPE EBAN-BADAT,  "PR CREATION DATE
   COLOR           TYPE CHAR10,
+  HITNO           TYPE I,
 END OF GS_DATA.
 
 DATA GT_DATA          LIKE TABLE OF GS_DATA.
+
+* ------------------------------------------- 선택된 테이블 ------------------------------------------- *
 
 DATA: BEGIN OF GS_SELECTED_DATA.
 
@@ -42,12 +50,16 @@ END OF GS_SELECTED_DATA.
 
 DATA GT_SELECTED_DATA LIKE TABLE OF GS_SELECTED_DATA.
 
+* ------------------------------------------- BAPI LOOP용 벤더 리스트 ------------------------------------------- *
+
 DATA: BEGIN OF GS_VENDOR,
 
   LIFNR TYPE EORD-LIFNR,
 END OF GS_VENDOR.
 
 DATA GT_VENDOR LIKE TABLE OF GS_VENDOR.
+
+* ------------------------------------------- 벤더 테이블 ------------------------------------------- *
 
 DATA: BEGIN OF GS_EORD,
 
@@ -56,10 +68,24 @@ DATA: BEGIN OF GS_EORD,
   VDATU TYPE EORD-VDATU,  "SOURCE LIST VALID FROM
   BDATU TYPE EORD-BDATU,  "SOURCE LIST VALID TO
   LIFNR TYPE EORD-LIFNR,  "VENDOR ACCOUNT
-  NOTKZ TYPE EORD-NOTKZ,  "BLOCKED INDICATOR
+  NOTKZ TYPE EORD-NOTKZ,  "BLOCKED INDICATOR'
+  NAME1 TYPE LFA1-NAME1,  "공급자 DESCRIPTION
 END OF GS_EORD.
 
 DATA: GT_EORD LIKE TABLE OF GS_EORD.
+
+* ------------------------------------------- 인포레코드 테이블 ------------------------------------------- *
+
+DATA: BEGIN OF GS_EINA,
+
+  MATNR TYPE EINA-MATNR,  "MATERIAL
+  LIFNR TYPE EINA-LIFNR,  "VENDOR ACCOUNT
+  INFNR TYPE EINA-INFNR,  "NO. OF INFO RECORD
+END OF GS_EINA.
+
+DATA: GT_EINA LIKE TABLE OF GS_EINA.
+
+* ------------------------------------------- 팝업 스크린 테이블 ------------------------------------------- *
 
 DATA: BEGIN OF GS_DATA2,
   MATNR TYPE EORD-MATNR,
@@ -68,11 +94,12 @@ DATA: BEGIN OF GS_DATA2,
   BDATU TYPE EORD-BDATU,  "SOURCE LIST VALID TO
   LIFNR TYPE EORD-LIFNR,  "VENDOR ACCOUNT
   NOTKZ TYPE EORD-NOTKZ,  "BLOCKED INDICATOR
+  NAME1 TYPE LFA1-NAME1,  "공급자 DESCRIPTION
 END OF GS_DATA2.
 
 DATA: GT_DATA2 LIKE TABLE OF GS_DATA2.
 
-DATA GV_ANSWER(3) TYPE C.
+* ------------------------------------------- BAPI LOOP용 PO번호 테이블  ------------------------------------------- *
 
 DATA: BEGIN OF GS_EBELN,
 
@@ -83,13 +110,19 @@ END OF GS_EBELN.
 
 DATA GT_EBELN LIKE TABLE OF GS_EBELN.
 
-DATA GV_COUNT_EBELN TYPE I.
+* ------------------------------------------- 스크린 ALV 구성요소 ------------------------------------------- *
 
 DATA: GO_CONTAINER_0100 TYPE REF TO CL_GUI_DOCKING_CONTAINER,
       GO_GRID_0100      TYPE REF TO CL_GUI_ALV_GRID.
 
 DATA: GO_CONTAINER_0200 TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
       GO_GRID_0200      TYPE REF TO CL_GUI_ALV_GRID.
+
+DATA : GS_SORT TYPE LVC_S_SORT,
+       GT_SORT TYPE LVC_T_SORT.
+
+DATA: GT_EXCLUDE TYPE UI_FUNCTIONS,
+      GS_EXCLUDE TYPE UI_FUNC.
 
 DATA: GS_FCAT_0100 TYPE LVC_S_FCAT,
       GT_FCAT_0100 TYPE LVC_T_FCAT.
@@ -101,10 +134,16 @@ DATA: GS_FCAT_0200 TYPE LVC_S_FCAT,
 
 DATA: GS_LAYO_0200 TYPE LVC_S_LAYO.
 
+* ------------------------------------------- OKCODE ------------------------------------------- *
+
 DATA: GV_OKCODE TYPE SY-UCOMM,
       GV_UCOMM  TYPE SY-UCOMM.
 
+* ------------------------------------------- DATA_CHANGED_METHOD EVENT 변수 ------------------------------------------- *
+
 DATA: GO_EVENT_RECEIVER TYPE REF TO ZCL_EVENT_RECEIVER.
+
+* ------------------------------------------- GET_SELECTED_ROWS METHOD 변수 ------------------------------------------- *
 
 DATA: GT_INDEX TYPE LVC_T_ROW,
       GS_INDEX TYPE LVC_S_ROW.
@@ -112,7 +151,6 @@ DATA: GT_INDEX TYPE LVC_T_ROW,
 DATA: GT_INDEX2 TYPE LVC_T_ROW,
       GS_INDEX2 TYPE LVC_S_ROW.
 
-DATA: GV_VENDOR_INPUT_ROW TYPE I.
+* ------------------------------------------- 200->100 번 스크린 입력용 변수 ------------------------------------------- *
 
-DATA : GS_SORT TYPE LVC_S_SORT,
-       GT_SORT TYPE TABLE OF LVC_T_SORT.
+DATA: GV_VENDOR_INPUT_ROW TYPE I.
