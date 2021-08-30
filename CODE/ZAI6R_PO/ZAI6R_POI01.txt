@@ -8,14 +8,46 @@
 *----------------------------------------------------------------------*
 MODULE USER_COMMAND_0100 INPUT.
 
+* ------------------------------------------- POPUP_TO_CONFIRM 용 변수 ------------------------------------------- *
+
+  DATA LV_ANSWER(1) TYPE C.
+
+* ------------------------------------------- OKCODE ------------------------------------------- *
+
   GV_UCOMM = GV_OKCODE.
   CLEAR GV_OKCODE.
+
+* ------------------------------------------- POST 버튼 클릭 시 동작 ------------------------------------------- *
 
   CASE GV_UCOMM.
 
     WHEN 'POST'.
 
-      PERFORM POST_DATA.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          TITLEBAR                    = '구매 오더 생성'
+          TEXT_QUESTION               = '구매 오더를 생성하시겠습니까?'
+          TEXT_BUTTON_1               = 'YES'
+          TEXT_BUTTON_2               = 'NO'
+          DEFAULT_BUTTON              = '1'
+          DISPLAY_CANCEL_BUTTON       = 'X'
+       IMPORTING
+         ANSWER                      = LV_ANSWER
+                .
+
+      IF LV_ANSWER = 'A'. "CANCEL
+
+        LEAVE LIST-PROCESSING.
+
+      ELSEIF LV_ANSWER = '1'. "YES
+
+        PERFORM POST_DATA.
+
+      ELSEIF LV_ANSWER = '2'. "NO
+
+        LEAVE LIST-PROCESSING.
+
+      ENDIF.
   ENDCASE.
 ENDMODULE.
 *&---------------------------------------------------------------------*
@@ -43,8 +75,12 @@ ENDMODULE.
 *----------------------------------------------------------------------*
 MODULE USER_COMMAND_0200 INPUT.
 
+* ------------------------------------------- OKCODE ------------------------------------------- *
+
   GV_UCOMM = GV_OKCODE.
   CLEAR GV_OKCODE.
+
+* ------------------------------------------- 버튼 동작 ------------------------------------------- *
 
   IF GV_UCOMM = 'CONTINUE'.
 

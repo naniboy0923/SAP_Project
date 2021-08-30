@@ -17,17 +17,20 @@ ENDMODULE.
 *&---------------------------------------------------------------------*
 MODULE SET_ALV_0100 OUTPUT.
 
+
   IF GO_CONTAINER_0100 IS INITIAL.
 
     PERFORM CREATE_OBJECT_0100.
     PERFORM INIT_FCAT_0100.
     PERFORM INIT_LAYOUT_0100.
     PERFORM SET_EVENT_0100.
-*    PERFORM SET_SORT_0100.
+    PERFORM SET_SORT_0100.
+    PERFORM TOOLBAR_EXCLUDING.
     PERFORM DISPLAY_ALV_0100.
   ELSE.
 
-    CALL METHOD GO_GRID_0100->REFRESH_TABLE_DISPLAY.
+    PERFORM REFRESH_ALV_0100.
+
   ENDIF.
 ENDMODULE.
 *&---------------------------------------------------------------------*
