@@ -28,6 +28,9 @@ MODULE set_alv_0100 OUTPUT.
 *  LAYOUT
     PERFORM SET_LAYOUT.
 
+*  TOOLBAR
+    PERFORM EXCL_TOOLBAR.
+
 *  EVENT
     PERFORM SET_EVENT.
 
@@ -41,6 +44,7 @@ MODULE set_alv_0100 OUTPUT.
 *  REFRESH
     PERFORM REFRESH_ALV.
   ENDIF.
+
 
 ENDMODULE.
 *&---------------------------------------------------------------------*
